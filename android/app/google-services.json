@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "581137144396",
+    "project_id": "learnandconnect-f984c",
+    "storage_bucket": "learnandconnect-f984c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:581137144396:android:3fb3582349945607e0b2e9",
+        "android_client_info": {
+          "package_name": "com.abs"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAr3WceCJ9TzY1neT_WUBXrPW1_E50_iTw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:581137144396:android:b36c2e76d88b0647e0b2e9",
+        "android_client_info": {
+          "package_name": "com.abs.learnandconnect"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAr3WceCJ9TzY1neT_WUBXrPW1_E50_iTw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

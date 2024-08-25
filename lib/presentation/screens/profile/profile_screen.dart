@@ -7,8 +7,7 @@ import '../../widgets/custom_button.dart';
 import '../../widgets/custom_textfield.dart';
 
 class ProfileScreen extends StatelessWidget {
-  final TextEditingController _firstNameController = TextEditingController();
-  final TextEditingController _lastNameController = TextEditingController();
+  final TextEditingController _NameController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -21,21 +20,15 @@ class ProfileScreen extends StatelessWidget {
           if (state is ProfileLoading) {
             return Center(child: CircularProgressIndicator());
           } else if (state is ProfileLoaded) {
-            _firstNameController.text = state.user.firstName;
-            _lastNameController.text = state.user.lastName;
+            _NameController.text = state.user.Name;
 
             return Padding(
               padding: EdgeInsets.all(16.0),
               child: Column(
                 children: [
                   CustomTextField(
-                    label: 'Prénom',
-                    controller: _firstNameController,
-                  ),
-                  SizedBox(height: 16),
-                  CustomTextField(
-                    label: 'Nom',
-                    controller: _lastNameController,
+                    label: 'Nom complet',
+                    controller: _NameController,
                   ),
                   SizedBox(height: 16),
                   CustomButton(
@@ -44,8 +37,7 @@ class ProfileScreen extends StatelessWidget {
                       BlocProvider.of<ProfileBloc>(context).add(
                         UpdateUserProfile(
                           user: state.user.copyWith(
-                            firstName: _firstNameController.text,
-                            lastName: _lastNameController.text,
+                            Name: _NameController.text,
                           ),
                         ),
                       );

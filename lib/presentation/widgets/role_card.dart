@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import '../../data/models/user_model.dart';
 
-class UserCard extends StatelessWidget {
-  final User user;
+class RoleCard extends StatelessWidget {
+  final Role role;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
-  const UserCard({
+  const RoleCard({
     Key? key,
-    required this.user,
+    required this.role,
     required this.onEdit,
     required this.onDelete,
   }) : super(key: key);
@@ -23,30 +23,13 @@ class UserCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            CircleAvatar(
-              radius: 30,
-              backgroundImage: NetworkImage(user.profilePictureUrl),
-              backgroundColor: Colors.grey[200],
-            ),
-            SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "${user.Name}",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    user.role.toString().split('.').last,  // Convertit l'énumération Role en texte
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                    ),
+                    role.toString().split('.').last, // Affiche le rôle
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),

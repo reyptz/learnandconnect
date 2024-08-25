@@ -6,11 +6,15 @@ class NotificationUtils {
       int id,
       String title,
       String body) async {
+
     var androidDetails = AndroidNotificationDetails(
-        'channelId', 'channelName', 'channelDescription',
-        importance: Importance.high);
-    var generalNotificationDetails =
-    NotificationDetails(android: androidDetails);
+      'channelId', // Premier argument positionnel
+      'channelName', // Deuxième argument positionnel
+      channelDescription: 'channelDescription', // Argument nommé
+      importance: Importance.high, // Autres paramètres comme des arguments nommés
+    );
+
+    var generalNotificationDetails = NotificationDetails(android: androidDetails);
 
     await flutterLocalNotificationsPlugin.show(
       id,

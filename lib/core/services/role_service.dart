@@ -1,28 +1,61 @@
-import 'role_repository.dart';
-import 'models/role_model.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../data/models/user_model.dart';
 
 class RoleService {
-  final RoleRepository _roleRepository = RoleRepository();
+  final CollectionReference roleCollection =
+  FirebaseFirestore.instance.collection('roles');
 
-  // Récupérer les détails d'un rôle par son nom
-  Future<Role?> getRoleByName(String roleName) async {
-    return await _roleRepository.getRoleByName(roleName);
-  }
-
-  // Attribuer un rôle à un utilisateur
-  Future<void> assignRoleToUser(String userId, String roleName) async {
-    Role? role = await _roleRepository.getRoleByName(roleName);
-    if (role != null) {
-      await _roleRepository.assignRoleToUser(userId, role.roleId);
+  Future<List<Role>> getRoles() async {
+    try {
+      QuerySnapshot snapshot = await roleCollection.get();
+      return snapshot.docs
+          .map((doc) => _stringToRole(doc['role']))
+          .toList();
+    } catch (e) {
+      throw Exception('Erreur lors du chargement des rôles: $e');
     }
   }
 
-  // Vérifier si un utilisateur a un rôle spécifique
-  Future<bool> userHasRole(String userId, String roleName) async {
-    Role? role = await _roleRepository.getRoleByName(roleName);
-    if (role != null) {
-      return await _roleRepository.userHasRole(userId, role.roleId);
+  Future<void> addRole(Role role) async {
+    try {
+      await roleCollection.add({'role': _roleToString(role)});
+    } catch (e) {
+      throw Exception('Erreur lors de l\'ajout du rôle: $e');
     }
-    return false;
+  }
+
+  Future<void> updateRole(Role oldRole, Role newRole) async {
+    try {
+      QuerySnapshot snapshot = await roleCollection
+          .where('role', isEqualTo: _roleToString(oldRole))
+          .get();
+      if (snapshot.docs.isNotEmpty) {
+        await roleCollection
+            .doc(snapshot.docs.first.id)
+            .update({'role': _roleToString(newRole)});
+      }
+    } catch (e) {
+      throw Exception('Erreur lors de la mise à jour du rôle: $e');
+    }
+  }
+
+  Future<void> deleteRole(Role role) async {
+    try {
+      QuerySnapshot snapshot =
+      await roleCollection.where('role', isEqualTo: _roleToString(role)).get();
+      if (snapshot.docs.isNotEmpty) {
+        await roleCollection.doc(snapshot.docs.first.id).delete();
+      }
+    } catch (e) {
+      throw Exception('Erreur lors de la suppression du rôle: $e');
+    }
+  }
+
+  String _roleToString(Role role) {
+    return role.toString().split('.').last;
+  }
+
+  Role _stringToRole(String roleString) {
+    return Role.values.firstWhere((role) => role.toString().split('.').last == roleString);
   }
 }

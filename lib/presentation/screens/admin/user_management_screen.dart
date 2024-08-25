@@ -45,7 +45,7 @@ class UserManagementScreen extends StatelessWidget {
                               TextButton(
                                 onPressed: () {
                                   // Action pour supprimer l'utilisateur
-                                  BlocProvider.of<UserBloc>(context).add(DeleteUser(user.userId));
+                                  BlocProvider.of<UserBloc>(context).add(DeleteUser(userId: user.userId));
                                   Navigator.of(context).pop(); // Fermer la boîte de dialogue
                                 },
                                 child: Text('Supprimer', style: TextStyle(color: Colors.red)),

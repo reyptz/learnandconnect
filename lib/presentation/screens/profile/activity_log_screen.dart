@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../blocs/activity_log/activity_log_bloc.dart';
+import '../../../blocs/activitylog/activity_log_bloc.dart';
+import '../../../blocs/activitylog/activity_log_state.dart';
 import '../../widgets/activity_log_card.dart';
 
 class ActivityLogScreen extends StatelessWidget {
@@ -18,8 +19,8 @@ class ActivityLogScreen extends StatelessWidget {
             return ListView.builder(
               itemCount: state.activityLogs.length,
               itemBuilder: (context, index) {
-                final log = state.activityLogs[index];
-                return ActivityLogCard(log: log);
+                final activityLog = state.activityLogs[index];
+                return ActivityLogCard(activityLog: activityLog);
               },
             );
           } else if (state is ActivityLogError) {

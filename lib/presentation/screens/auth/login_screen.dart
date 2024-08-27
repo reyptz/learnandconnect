@@ -23,7 +23,7 @@ class LoginScreen extends StatelessWidget {
               SnackBar(content: Text(state.message)),
             );
           } else if (state is AuthSuccess) {
-            Navigator.pushReplacementNamed(context, '/home');
+            Navigator.pushReplacementNamed(context, '/');
           }
         },
         child: Padding(

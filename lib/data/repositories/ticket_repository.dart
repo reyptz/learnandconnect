@@ -57,4 +57,23 @@ class TicketRepository {
       return [];
     }
   }
+
+  // Ajouter un historique de ticket
+  Future<void> addTicketHistory(String ticketId, TicketHistory history) async {
+    // Ajout d'une entrée d'historique dans une sous-collection 'history'
+    await ticketCollection
+        .doc(ticketId)
+        .collection('history')
+        .add(history.toFirestore());
+  }
+
+  // Récupérer l'historique d'un ticket
+  Future<List<TicketHistory>> getTicketHistory(String ticketId) async {
+    QuerySnapshot historySnapshot =
+    await ticketCollection.doc(ticketId).collection('history').get();
+
+    return historySnapshot.docs
+        .map((doc) => TicketHistory.fromFirestore(doc))
+        .toList();
+  }
 }

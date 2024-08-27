@@ -37,6 +37,7 @@ class AuthRepository {
       await _firebaseAuth.signOut();
     } catch (e) {
       print('Error during sign out: $e');
+      throw Exception('Failed to sign out');
     }
   }
 
@@ -56,6 +57,7 @@ class AuthRepository {
       await _firebaseAuth.sendPasswordResetEmail(email: email);
     } catch (e) {
       print('Error during password reset: $e');
+      throw Exception('Failed to send password reset email');
     }
   }
 }

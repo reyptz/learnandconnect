@@ -4,7 +4,7 @@ class AnalyticsService {
   final FirebaseAnalytics _analytics = FirebaseAnalytics.instance;
 
   // Enregistrer un événement analytique personnalisé
-  Future<void> logEvent(String eventName, Map<String, dynamic> parameters) async {
+  Future<void> logEvent(String eventName, Map<String, Object> parameters) async {
     await _analytics.logEvent(name: eventName, parameters: parameters);
   }
 

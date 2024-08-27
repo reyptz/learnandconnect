@@ -1,6 +1,5 @@
 import '../../data/repositories/ticket_repository.dart';
 import '../../data/models/ticket_model.dart';
-import '../../data/models/ticket_history_model.dart';
 
 class TicketService {
   final TicketRepository _ticketRepository = TicketRepository();

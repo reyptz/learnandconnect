@@ -14,12 +14,15 @@ class AuthLoading extends AuthState {}
 
 class AuthSuccess extends AuthState {
   final firebase_auth.User user;
+  final Object? userData;
 
-  const AuthSuccess({required this.user});
+  const AuthSuccess({required this.user, this.userData});
 
   @override
-  List<Object?> get props => [user];
+  List<Object?> get props => [user, userData];
 }
+
+class PasswordResetSuccess extends AuthState {}
 
 class AuthFailure extends AuthState {
   final String message;

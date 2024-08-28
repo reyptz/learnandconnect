@@ -6,15 +6,14 @@ import '../../../blocs/auth/auth_state.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_textfield.dart';
 
-class LoginScreen extends StatelessWidget {
+class ForgotPasswordScreen extends StatelessWidget {
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Connexion'),
+        title: Text('Mot de passe oublié'),
       ),
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
@@ -22,8 +21,12 @@ class LoginScreen extends StatelessWidget {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.message)),
             );
-          } else if (state is AuthSuccess) {
-            Navigator.pushReplacementNamed(context, '/');
+          } else if (state is PasswordResetSuccess) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Un email de réinitialisation a été envoyé.')),
+            );
+            // Rediriger vers la page de confirmation après l'envoi de l'email
+            Navigator.pushReplacementNamed(context, '/password-reset-confirmation');
           }
         },
         child: Padding(
@@ -35,36 +38,13 @@ class LoginScreen extends StatelessWidget {
                 controller: _emailController,
               ),
               SizedBox(height: 16),
-              CustomTextField(
-                label: 'Mot de passe',
-                controller: _passwordController,
-                obscureText: true,
-              ),
-              SizedBox(height: 16),
               CustomButton(
-                label: 'Se connecter',
+                label: 'Envoyer un lien de réinitialisation',
                 onPressed: () {
                   BlocProvider.of<AuthBloc>(context).add(
-                    AuthSignIn(
-                      email: _emailController.text,
-                      password: _passwordController.text,
-                    ),
+                    AuthForgotPassword(email: _emailController.text),
                   );
                 },
-              ),
-              SizedBox(height: 16),
-              TextButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/sign-up');
-                },
-                child: Text('Pas de compte ?'),
-              ),
-              SizedBox(height: 16),
-              TextButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/forgot-password');
-                },
-                child: Text('Mot de passe oublié ?'),
               ),
             ],
           ),

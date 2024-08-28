@@ -10,6 +10,7 @@ class RegisterScreen extends StatelessWidget {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _roleController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +25,7 @@ class RegisterScreen extends StatelessWidget {
               SnackBar(content: Text(state.message)),
             );
           } else if (state is AuthSuccess) {
-            Navigator.pushReplacementNamed(context, '/home');
+            Navigator.pushReplacementNamed(context, '/login');
           }
         },
         child: Padding(
@@ -47,6 +48,11 @@ class RegisterScreen extends StatelessWidget {
                 obscureText: true,
               ),
               SizedBox(height: 16),
+              CustomTextField(
+                label: 'Rôle',
+                controller: _roleController,
+              ),
+              SizedBox(height: 16),
               CustomButton(
                 label: 'S\'inscrire',
                 onPressed: () {
@@ -56,6 +62,7 @@ class RegisterScreen extends StatelessWidget {
                       email: _emailController.text,
                       password: _passwordController.text,
                       name: _nameController.text,
+                      role: _roleController.text,
                     ),
                   );
                 },

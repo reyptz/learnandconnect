@@ -1,135 +1,105 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../blocs/chat/chat_bloc.dart';
-import '../../../blocs/chat/chat_event.dart';
-import '../../../blocs/chat/chat_state.dart';
-import '../../../data/models/chat_model.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class ChatScreen extends StatelessWidget {
-  final String chatId; // L'identifiant du chat auquel cet écran est associé
-  final String currentUserId; // L'ID de l'utilisateur actuel (pour différencier les messages)
+class ChatScreen extends StatefulWidget {
+  final String chatId; // ID du chat
+  final String currentUserId; // ID de l'utilisateur actuel
 
-  ChatScreen({
-    Key? key,
-    required this.chatId,
-    required this.currentUserId,
-  }) : super(key: key);
+  ChatScreen({required this.chatId, required this.currentUserId});
 
+  @override
+  _ChatScreenState createState() => _ChatScreenState();
+}
+
+class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  void _sendMessage() async {
+    if (_messageController.text.isEmpty) return;
+
+    await _firestore.collection('chats').doc(widget.chatId).collection('messages').add({
+      'sender_id': widget.currentUserId,
+      'message_text': _messageController.text,
+      'sent_at': FieldValue.serverTimestamp(),
+      'attachments': [],
+    });
+
+    _messageController.clear();
+
+    // Mettre à jour le champ 'last_message_at' du chat
+    await _firestore.collection('chats').doc(widget.chatId).update({
+      'last_message_at': FieldValue.serverTimestamp(),
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Chat'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.refresh),
-            onPressed: () {
-              // Charger à nouveau les messages
-              BlocProvider.of<ChatBloc>(context).add(LoadMessages(chatId: chatId));
-            },
-          ),
-        ],
       ),
       body: Column(
         children: [
           Expanded(
-            child: BlocBuilder<ChatBloc, ChatState>(
-              builder: (context, state) {
-                if (state is ChatLoading) {
+            child: StreamBuilder<QuerySnapshot>(
+              stream: _firestore.collection('chats').doc(widget.chatId).collection('messages').orderBy('sent_at').snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
                   return Center(child: CircularProgressIndicator());
-                } else if (state is ChatLoaded) {
-                  return ListView.builder(
-                    reverse: true,
-                    itemCount: state.messages.length,
-                    itemBuilder: (context, index) {
-                      final message = state.messages[index];
-                      return _buildMessageTile(message);
-                    },
-                  );
-                } else if (state is ChatError) {
-                  return Center(child: Text('Erreur: ${state.message}'));
-                } else {
-                  return Center(child: Text('Aucun message disponible.'));
                 }
+
+                if (snapshot.hasError) {
+                  return Center(child: Text('Erreur de chargement des messages'));
+                }
+
+                final messages = snapshot.data?.docs ?? [];
+
+                return ListView.builder(
+                  itemCount: messages.length,
+                  itemBuilder: (context, index) {
+                    final message = messages[index].data() as Map<String, dynamic>;
+                    final isCurrentUser = message['sender_id'] == widget.currentUserId;
+
+                    return Align(
+                      alignment: isCurrentUser ? Alignment.centerRight : Alignment.centerLeft,
+                      child: Container(
+                        padding: EdgeInsets.all(8),
+                        margin: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                        decoration: BoxDecoration(
+                          color: isCurrentUser ? Colors.blue : Colors.grey[300],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(message['message_text']),
+                      ),
+                    );
+                  },
+                );
               },
             ),
           ),
-          _buildMessageInput(context),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMessageTile(Message message) {
-    final isCurrentUser = message.senderId == currentUserId;
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-      alignment: isCurrentUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Column(
-        crossAxisAlignment:
-        isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              color: isCurrentUser ? Colors.blue[200] : Colors.grey[200],
-              borderRadius: BorderRadius.circular(8),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _messageController,
+                    decoration: InputDecoration(
+                      hintText: 'Entrez votre message',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.send),
+                  onPressed: _sendMessage,
+                ),
+              ],
             ),
-            padding: EdgeInsets.all(12),
-            child: Text(
-              message.messageText,
-              style: TextStyle(fontSize: 16),
-            ),
-          ),
-          SizedBox(height: 5),
-          Text(
-            _formatTimestamp(message.sentAt),
-            style: TextStyle(fontSize: 12, color: Colors.grey),
           ),
         ],
       ),
     );
-  }
-
-  Widget _buildMessageInput(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _messageController,
-              decoration: InputDecoration(
-                hintText: 'Entrez votre message...',
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ),
-          IconButton(
-            icon: Icon(Icons.send),
-            onPressed: () => _sendMessage(context),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _sendMessage(BuildContext context) {
-    final messageText = _messageController.text;
-    if (messageText.isNotEmpty) {
-      final message = Message(
-        senderId: currentUserId,
-        messageText: messageText,
-        sentAt: DateTime.now(),
-        attachments: [],
-      );
-      BlocProvider.of<ChatBloc>(context).add(SendMessage(chatId: chatId, message: message));
-      _messageController.clear();
-    }
-  }
-
-  String _formatTimestamp(DateTime timestamp) {
-    return "${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}"; // Simple format HH:mm
   }
 }

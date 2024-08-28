@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'app.dart';
 import 'blocs/auth/auth_bloc.dart';
 import 'blocs/ticket/ticket_bloc.dart';
@@ -13,13 +14,18 @@ import './core/services/firestore_service.dart';
 import './core/services/notification_service.dart';
 import './core/services/DataLoader.dart';
 
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  print('Un message en arrière-plan a été reçu: ${message.messageId}');
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Assurez-vous que les services Flutter sont initialisés
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // Créer une instance du DataLoaderService
+  /* Créer une instance du DataLoaderService
   final dataLoaderService = DataLoaderService();
 
   try {
@@ -28,7 +34,8 @@ Future<void> main() async {
   } catch (e) {
     print('Erreur lors du chargement des données: $e');
     // Vous pouvez afficher une alerte ou un écran d'erreur ici si nécessaire
-  }
+  } */
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   runApp(MyApp()); // Démarrer l'application après l'initialisation de Firebase
 }

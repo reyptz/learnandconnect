@@ -2,7 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../presentation/screens/auth/password_reset_confirmation_screen.dart';
 import '../presentation/screens/auth/forgot_password_screen.dart';
+import '../presentation/screens/chat/chat_list_screen.dart';
 import '../presentation/screens/chat/chat_screen.dart';
+import '../presentation/screens/home/dashboard_screen.dart';
+import '../presentation/screens/profile/activity_log_screen.dart';
+import '../presentation/screens/task/report_generation_screen.dart';
+import '../presentation/screens/tickets/ticket_create_screen.dart';
+import '../presentation/screens/tickets/ticket_edit_screen.dart';
+import '../presentation/screens/tickets/ticket_history_screen.dart';
+import '../presentation/screens/tickets/ticket_reply_screen.dart';
+import '../presentation/screens/tickets/ticket_reponse_screen.dart';
+import '../presentation/screens/users/role_screen.dart';
+import '../presentation/screens/users/users_screen.dart';
 import 'route_paths.dart';
 import '../presentation/screens/home/home_screen.dart';
 import '../presentation/screens/auth/login_screen.dart';
@@ -39,13 +50,43 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => PasswordResetConfirmationScreen());
       case RoutePaths.tickets:
         return _authGuard(currentUser, TicketListScreen());
+      case RoutePaths.ticketCreate:
+        return _authGuard(currentUser, CreateTicketScreen());
       case RoutePaths.ticketDetail:
         final ticketId = settings.arguments as String;
         return _authGuard(currentUser, TicketDetailScreen(ticketId: ticketId));
+      case RoutePaths.ticketEdit:
+        final ticketId = settings.arguments as String;
+        return _authGuard(currentUser, EditTicketScreen(ticketId: ticketId));
+      case RoutePaths.ticketReponse:
+        final ticketId = settings.arguments as String;
+        return _authGuard(currentUser, ReponseTicketScreen(ticketId: ticketId));
+      case RoutePaths.ticketHistory:
+        final ticketId = settings.arguments as String;
+        return _authGuard(currentUser, HistoryTicketsScreen(ticketId: ticketId));
+      case RoutePaths.ticketReply:
+        final ticketId = settings.arguments as String;
+        return _authGuard(currentUser, TicketReplyScreen(ticketId: ticketId));
       case RoutePaths.profile:
         return _authGuard(currentUser, ProfileScreen());
+      case RoutePaths.activity:
+        return _authGuard(currentUser, ActivityLogScreen());
+      case RoutePaths.report:
+        return _authGuard(currentUser, ReportsScreen());
+      case RoutePaths.dashboard:
+        return _authGuard(currentUser, DashboardScreen());
+      case RoutePaths.users:
+        return _authGuard(currentUser, UsersScreen());
+      case RoutePaths.role:
+        return _authGuard(currentUser, RoleScreen());
       case RoutePaths.chat:
-        //return _authGuard(currentUser, ChatScreen());
+        final currentUserId = settings.arguments as String? ?? '';
+        return _authGuard(currentUser, ChatListScreen(currentUserId: currentUserId));
+      case RoutePaths.chatMessage:
+        final arguments = settings.arguments as Map<String, String>? ?? {};
+        final currentUserId = arguments['currentUserId'] ?? '';
+        final chatId = arguments['chatId'] ?? '';
+        return _authGuard(currentUser, ChatScreen(currentUserId: currentUserId, chatId: chatId));
       case RoutePaths.notifications:
         return _authGuard(currentUser, NotificationsScreen());
       case RoutePaths.settings:

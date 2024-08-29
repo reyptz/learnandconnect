@@ -57,6 +57,12 @@ class AuthService {
     return _firebaseAuth.currentUser;
   }
 
+  // Obtenir l'ID de l'utilisateur actuellement connecté
+  String? getCurrentUserId() {
+    final user = _firebaseAuth.currentUser;
+    return user?.uid;
+  }
+
   // Récupérer les données utilisateur depuis Firestore
   Future<DocumentSnapshot> getUserData() async {
     firebase_auth.User? user = _firebaseAuth.currentUser;

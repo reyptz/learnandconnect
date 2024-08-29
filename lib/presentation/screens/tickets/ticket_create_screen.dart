@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../core/services/auth_service.dart';
 
 class CreateTicketScreen extends StatefulWidget {
   @override
@@ -7,36 +8,65 @@ class CreateTicketScreen extends StatefulWidget {
 }
 
 class _CreateTicketScreenState extends State<CreateTicketScreen> {
+  final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+  String _selectedPriority = 'Moyenne'; // Priorité par défaut
   String _selectedCategory = 'Technique'; // Catégorie par défaut
+
+  final List<String> _priorities = ['Haute', 'Moyenne', 'Faible'];
   final List<String> _categories = ['Technique', 'Pédagogique'];
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  final AuthService _authService = AuthService(); // Initialisation de AuthService
+
+
   void _submitTicket() async {
-    if (_descriptionController.text.isEmpty) {
+    if (_titleController.text.isEmpty || _descriptionController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('La description ne peut pas être vide.'),
+        content: Text('Titre et description ne peuvent pas être vides.'),
       ));
       return;
     }
 
-    // Création du ticket dans Firestore
-    await _firestore.collection('tickets').add({
+    // Supposez que vous avez les IDs des utilisateurs (créateur et assigné)
+    String? userId = _authService.getCurrentUserId(); // ID de l'utilisateur actuel
+    String? assignedTo = ''; // ID de l'utilisateur assigné (peut être null)
+
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Erreur : Utilisateur non connecté.'),
+      ));
+      return;
+    }
+
+    // Référence au nouveau document dans Firestore
+    DocumentReference docRef = _firestore.collection('tickets').doc();
+
+    // Création du ticket dans Firestore avec les valeurs par défaut
+    await docRef.set({
+      'ticket_id': docRef.id, // Utilisation de l'ID généré par Firestore
+      'title': _titleController.text,
       'description': _descriptionController.text,
-      'category': _selectedCategory,
-      'status': 'Attente', // État initial
+      'status': 'Attente', // État initial défini par défaut
+      'priority': _selectedPriority, // Priorité sélectionnée
+      'category': _selectedCategory, // Catégorie sélectionnée
+      'user_id': userId, // ID de l'utilisateur qui a créé le ticket
+      'assigned_to': assignedTo, // ID de l'utilisateur assigné (peut être null)
       'created_at': FieldValue.serverTimestamp(),
+      'updated_at': FieldValue.serverTimestamp(),
     });
 
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text('Ticket soumis avec succès!'),
+      content: Text('Ticket sauvegardé avec succès!'),
     ));
 
     // Réinitialiser les champs
+    _titleController.clear();
     _descriptionController.clear();
     setState(() {
-      _selectedCategory = _categories.first;
+      _selectedPriority = 'Moyenne'; // Réinitialiser à la priorité par défaut
+      _selectedCategory = 'Technique'; // Réinitialiser à la catégorie par défaut
     });
   }
 
@@ -44,48 +74,145 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Créer un ticket'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text('Ajouter | Modifier', style: TextStyle(color: Colors.black)),
+        centerTitle: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Description', style: TextStyle(fontSize: 18)),
-            SizedBox(height: 8),
-            TextField(
-              controller: _descriptionController,
-              maxLines: 4,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: 'Décrivez votre problème ou demande d\'assistance...',
-              ),
-            ),
+            _buildTextField(_titleController, 'Titre'),
             SizedBox(height: 16),
-            Text('Catégorie', style: TextStyle(fontSize: 18)),
-            SizedBox(height: 8),
-            DropdownButton<String>(
-              value: _selectedCategory,
-              items: _categories.map((category) {
-                return DropdownMenuItem(
-                  value: category,
-                  child: Text(category),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedCategory = value!;
-                });
-              },
-            ),
+            _buildTextField(_descriptionController, 'Description', maxLines: 3),
             SizedBox(height: 16),
+            _buildDropdownField('Priorité', _selectedPriority, _priorities, (value) {
+              setState(() {
+                _selectedPriority = value!;
+              });
+            }),
+            SizedBox(height: 16),
+            _buildDropdownField('Catégorie', _selectedCategory, _categories, (value) {
+              setState(() {
+                _selectedCategory = value!;
+              });
+            }),
+            SizedBox(height: 32),
             ElevatedButton(
               onPressed: _submitTicket,
-              child: Text('Soumettre le ticket'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 24.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text('SAUVEGARDER', style: TextStyle(color: Colors.white, fontSize: 16)),
             ),
           ],
         ),
       ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Accueil',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.assignment),
+            label: 'Ticket',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.notifications),
+            label: 'Notifications',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.chat),
+            label: 'Chat',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profil',
+          ),
+        ],
+        currentIndex: 1, // L'index actuel pour la page des tickets
+        onTap: (index) {
+          // Gérer la navigation entre les différentes pages
+          switch (index) {
+            case 0:
+              Navigator.pushReplacementNamed(context, '/');
+              break;
+            case 1:
+              Navigator.pushReplacementNamed(context, '/tickets');
+              break;
+            case 2:
+              Navigator.pushReplacementNamed(context, '/notifications');
+              break;
+            case 3:
+              Navigator.pushReplacementNamed(context, '/chat');
+              break;
+            case 4:
+              Navigator.pushReplacementNamed(context, '/profile');
+              break;
+          }
+        },
+      ),
+    );
+  }
+
+  Widget _buildTextField(TextEditingController controller, String labelText, {int maxLines = 1}) {
+    return TextField(
+      controller: controller,
+      maxLines: maxLines,
+      decoration: InputDecoration(
+        labelText: labelText,
+        labelStyle: TextStyle(color: Colors.grey),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.orange, width: 2),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.orange, width: 2),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDropdownField(
+      String labelText, String selectedValue, List<String> items, ValueChanged<String?> onChanged) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(labelText, style: TextStyle(fontSize: 16)),
+        SizedBox(height: 8),
+        DropdownButtonFormField<String>(
+          value: selectedValue,
+          items: items.map((item) {
+            return DropdownMenuItem(
+              value: item,
+              child: Text(item),
+            );
+          }).toList(),
+          onChanged: onChanged,
+          decoration: InputDecoration(
+            contentPadding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 12.0),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.orange, width: 2),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.orange, width: 2),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

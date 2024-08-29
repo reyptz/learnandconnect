@@ -40,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           children: [
             Text(
-              'Mes tickets',
+              'Les tickets',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 16),
@@ -86,7 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       return TicketCard(
                         ticketId: ticket['ticket_id'],
                         title: ticket['title'],
-                        status: ticket['status'],
+                        status: ticket['category'],
                         onDetailsPressed: () {
                           Navigator.pushNamed(
                             context,

@@ -17,13 +17,10 @@ class RoutePaths {
   static const String report = '/report';
   static const String dashboard = '/dashboard';
   static const String profile = '/profile';
-  static const String activity = '/activity';
-  static const String settings = '/settings';
   static const String chat = '/chat';
   static const String chatMessage = '/chat-message';
   static const String notifications = '/notifications';
   static const String users = '/users';
-  static const String role = '/role';
 
   // Routes d'erreur
   static const String error = '/error';

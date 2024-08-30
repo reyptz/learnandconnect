@@ -18,10 +18,12 @@ class App extends StatelessWidget {
         }
       },
       child: MaterialApp(
-        title: 'Gestion de Tickets',
+        title: 'Learn & Connect',
+        debugShowCheckedModeBanner: false,
         theme: AppThemes.lightTheme,  // Utilise le thème clair défini dans app_themes.dart
         darkTheme: AppThemes.darkTheme,  // Utilise le thème sombre
-        themeMode: ThemeMode.system,  // Change automatiquement entre clair et sombre
+        //themeMode: ThemeMode.system,  // Change automatiquement entre clair et sombre
+        themeMode: ThemeMode.light,
         initialRoute: '/login',  // Définit la route initiale de l'application
         onGenerateRoute: _appRouter.generateRoute,  // Utilise AppRouter pour générer les routes
       ),

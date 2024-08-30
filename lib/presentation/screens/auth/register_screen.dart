@@ -10,7 +10,9 @@ class RegisterScreen extends StatelessWidget {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _roleController = TextEditingController();
+
+  // Utilisation d'une variable pour le rôle
+  String _selectedRole = 'Apprenant'; // Valeur par défaut
 
   @override
   Widget build(BuildContext context) {
@@ -48,9 +50,21 @@ class RegisterScreen extends StatelessWidget {
                 obscureText: true,
               ),
               SizedBox(height: 16),
-              CustomTextField(
-                label: 'Rôle',
-                controller: _roleController,
+              DropdownButtonFormField<String>(
+                decoration: InputDecoration(
+                  labelText: 'Rôle',
+                  border: OutlineInputBorder(),
+                ),
+                value: _selectedRole,
+                items: ['Apprenant', 'Formateur'].map((String role) {
+                  return DropdownMenuItem<String>(
+                    value: role,
+                    child: Text(role),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  _selectedRole = newValue!;
+                },
               ),
               SizedBox(height: 16),
               CustomButton(
@@ -62,7 +76,7 @@ class RegisterScreen extends StatelessWidget {
                       email: _emailController.text,
                       password: _passwordController.text,
                       name: _nameController.text,
-                      role: _roleController.text,
+                      role: _selectedRole, // Utilisation du rôle sélectionné
                     ),
                   );
                 },

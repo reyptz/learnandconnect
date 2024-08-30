@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../blocs/chat/chat_bloc.dart';
 import '../../blocs/chat/chat_event.dart';
 import '../../blocs/chat/chat_state.dart';
 import '../../data/models/chat_model.dart';
+import 'package:intl/intl.dart';
 
 class ChatWidget extends StatefulWidget {
   final String chatId;
@@ -16,6 +19,7 @@ class ChatWidget extends StatefulWidget {
 
 class _ChatWidgetState extends State<ChatWidget> {
   final TextEditingController _messageController = TextEditingController();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   void initState() {
@@ -23,7 +27,8 @@ class _ChatWidgetState extends State<ChatWidget> {
     // Charger les messages au début
     BlocProvider.of<ChatBloc>(context).add(LoadMessages(chatId: widget.chatId));
     // Écouter les messages en temps réel
-    BlocProvider.of<ChatBloc>(context).add(ListenToMessages(chatId: widget.chatId));
+    BlocProvider.of<ChatBloc>(context)
+        .add(ListenToMessages(chatId: widget.chatId));
   }
 
   @override
@@ -45,7 +50,8 @@ class _ChatWidgetState extends State<ChatWidget> {
                 return Center(child: CircularProgressIndicator());
               } else if (state is ChatLoaded) {
                 return ListView.builder(
-                  reverse: true, // Affiche les messages du plus récent au plus ancien
+                  reverse:
+                      true, // Affiche les messages du plus récent au plus ancien
                   itemCount: state.messages.length,
                   itemBuilder: (context, index) {
                     final message = state.messages[index];
@@ -65,14 +71,58 @@ class _ChatWidgetState extends State<ChatWidget> {
     );
   }
 
+  Future<String> _getSenderName(String senderId) async {
+    try {
+      DocumentSnapshot doc =
+          await _firestore.collection('users').doc(senderId).get();
+
+      // Convertir les données en Map<String, dynamic>
+      Map<String, dynamic>? data = doc.data() as Map<String, dynamic>?;
+
+      // Retourner le nom de l'utilisateur, ou 'Utilisateur' par défaut
+      return data?['name'] ?? 'Utilisateur';
+    } catch (e) {
+      return 'Utilisateur';
+    }
+  }
+
   Widget _buildMessageTile(Message message) {
-    return ListTile(
-      title: Text(message.senderId), // Remplacez par le nom de l'utilisateur si possible
-      subtitle: Text(message.messageText),
-      trailing: Text(
-        message.sentAt.toLocal().toString(), // Formattez cette date selon vos besoins
-        style: TextStyle(fontSize: 12, color: Colors.grey),
-      ),
+    return FutureBuilder<String>(
+      future: _getSenderName(message
+          .senderId), // Appel asynchrone pour obtenir le nom de l'expéditeur
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          // Affichez un indicateur de chargement pendant que le nom est en cours de récupération
+          return ListTile(
+            title: Text('Chargement...'),
+            subtitle: Text(message.messageText),
+            trailing: Text(
+              DateFormat('dd/MM/yyyy HH:mm').format(message.sentAt.toLocal()),
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+          );
+        } else if (snapshot.hasError) {
+          // Gérez l'erreur si le chargement échoue
+          return ListTile(
+            title: Text('Erreur'),
+            subtitle: Text(message.messageText),
+            trailing: Text(
+              DateFormat('dd/MM/yyyy HH:mm').format(message.sentAt.toLocal()),
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+          );
+        } else {
+          // Affichez le nom de l'expéditeur une fois récupéré
+          return ListTile(
+            title: Text(snapshot.data ?? 'Utilisateur'),
+            subtitle: Text(message.messageText),
+            trailing: Text(
+              DateFormat('dd/MM/yyyy HH:mm').format(message.sentAt.toLocal()),
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+          );
+        }
+      },
     );
   }
 
@@ -102,14 +152,18 @@ class _ChatWidgetState extends State<ChatWidget> {
   void _sendMessage() {
     final messageText = _messageController.text;
     if (messageText.isNotEmpty) {
-      final message = Message(
-        senderId: 'currentUserId', // Remplacez par l'ID de l'utilisateur actuel
-        messageText: messageText,
-        sentAt: DateTime.now(),
-        attachments: [], // Gérez les pièces jointes si nécessaire
-      );
-      BlocProvider.of<ChatBloc>(context).add(SendMessage(chatId: widget.chatId, message: message));
-      _messageController.clear();
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null) {
+        final message = Message(
+          senderId:
+              currentUser.uid, // Utilisation de l'ID de l'utilisateur Firebase
+          messageText: messageText,
+          sentAt: DateTime.now(), // Gérez les pièces jointes si nécessaire
+        );
+        BlocProvider.of<ChatBloc>(context)
+            .add(SendMessage(chatId: widget.chatId, message: message));
+        _messageController.clear();
+      }
     }
   }
 }

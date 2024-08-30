@@ -40,13 +40,11 @@ class Message {
   String senderId; // Reference to users/user_id
   String messageText;
   DateTime sentAt;
-  List<String> attachments; // List of URLs
 
   Message({
     required this.senderId,
     required this.messageText,
     required this.sentAt,
-    required this.attachments,
   });
 
   // Convertir un DocumentSnapshot Firestore en instance de Message
@@ -56,7 +54,6 @@ class Message {
       senderId: data['sender_id'] ?? '',
       messageText: data['message_text'] ?? '',
       sentAt: (data['sent_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      attachments: List<String>.from(data['attachments'] ?? []),
     );
   }
 
@@ -66,7 +63,6 @@ class Message {
       senderId: data['sender_id'] ?? '',
       messageText: data['message_text'] ?? '',
       sentAt: (data['sent_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      attachments: List<String>.from(data['attachments'] ?? []),
     );
   }
 
@@ -76,7 +72,6 @@ class Message {
       'sender_id': senderId,
       'message_text': messageText,
       'sent_at': sentAt,
-      'attachments': attachments,
     };
   }
 }

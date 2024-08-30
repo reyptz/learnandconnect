@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../core/constants/app_colors.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -33,7 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Mes tickets'),
+        title: Text('Accueil'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -53,6 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
+              style: TextStyle(color: AppColors.darkGrey), // Couleur du texte saisi
             ),
             SizedBox(height: 16),
             Expanded(
@@ -170,13 +172,13 @@ class TicketCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 4,
-      margin: EdgeInsets.symmetric(vertical: 8),
+      margin: EdgeInsets.symmetric(vertical: 8),      
       child: ListTile(
         title: Text(title, style: TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Text(status),
         trailing: TextButton(
           onPressed: onDetailsPressed,
-          child: Text('Détails', style: TextStyle(color: Colors.orange)),
+          child: Text('Détails', style: TextStyle(color: Colors.orange.shade800)),
         ),
       ),
     );

@@ -1,14 +1,11 @@
 import '../../data/repositories/user_repository.dart';
 import '../../data/repositories/ticket_repository.dart';
-import '../../data/repositories/category_repository.dart';
 import '../../data/models/user_model.dart';
 import '../../data/models/ticket_model.dart';
-import '../../data/models/category_model.dart';
 
-class FirestoreService {
+class FirestoreService extends UserRepository {
   final UserRepository _userRepository = UserRepository();
   final TicketRepository _ticketRepository = TicketRepository();
-  final CategoryRepository _categoryRepository = CategoryRepository();
 
   // Récupérer un utilisateur par ID
   Future<User?> getUserById(String userId) async {
@@ -35,13 +32,4 @@ class FirestoreService {
     await _ticketRepository.createTicket(ticket);
   }
 
-  // Récupérer une catégorie par ID
-  Future<Category?> getCategoryById(String categoryId) async {
-    return await _categoryRepository.getCategoryById(categoryId);
-  }
-
-  // Créer une nouvelle catégorie
-  Future<void> createCategory(Category category) async {
-    await _categoryRepository.createCategory(category);
-  }
 }

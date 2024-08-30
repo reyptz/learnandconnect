@@ -5,14 +5,12 @@ import '../presentation/screens/auth/forgot_password_screen.dart';
 import '../presentation/screens/chat/chat_list_screen.dart';
 import '../presentation/screens/chat/chat_screen.dart';
 import '../presentation/screens/home/dashboard_screen.dart';
-import '../presentation/screens/profile/activity_log_screen.dart';
-import '../presentation/screens/task/report_generation_screen.dart';
+import '../presentation/screens/users/report_generation_screen.dart';
 import '../presentation/screens/tickets/ticket_create_screen.dart';
 import '../presentation/screens/tickets/ticket_edit_screen.dart';
 import '../presentation/screens/tickets/ticket_history_screen.dart';
 import '../presentation/screens/tickets/ticket_reply_screen.dart';
 import '../presentation/screens/tickets/ticket_reponse_screen.dart';
-import '../presentation/screens/users/role_screen.dart';
 import '../presentation/screens/users/users_screen.dart';
 import 'route_paths.dart';
 import '../presentation/screens/home/home_screen.dart';
@@ -22,7 +20,6 @@ import '../presentation/screens/tickets/ticket_list_screen.dart';
 import '../presentation/screens/tickets/ticket_detail_screen.dart';
 import '../presentation/screens/profile/profile_screen.dart';
 import '../presentation/screens/notifications/notifications_screen.dart';
-import '../presentation/screens/profile/settings_screen.dart';
 import '../blocs/auth/auth_bloc.dart';
 import '../blocs/auth/auth_state.dart';
 import '../core/services/auth_service.dart';
@@ -69,16 +66,12 @@ class AppRouter {
         return _authGuard(currentUser, TicketReplyScreen(ticketId: ticketId));
       case RoutePaths.profile:
         return _authGuard(currentUser, ProfileScreen());
-      case RoutePaths.activity:
-        return _authGuard(currentUser, ActivityLogScreen());
       case RoutePaths.report:
         return _authGuard(currentUser, ReportsScreen());
       case RoutePaths.dashboard:
         return _authGuard(currentUser, DashboardScreen());
       case RoutePaths.users:
         return _authGuard(currentUser, UsersScreen());
-      case RoutePaths.role:
-        return _authGuard(currentUser, RoleScreen());
       case RoutePaths.chat:
         final currentUserId = settings.arguments as String? ?? '';
         return _authGuard(currentUser, ChatListScreen(currentUserId: currentUserId));
@@ -89,8 +82,6 @@ class AppRouter {
         return _authGuard(currentUser, ChatScreen(currentUserId: currentUserId, chatId: chatId));
       case RoutePaths.notifications:
         return _authGuard(currentUser, NotificationsScreen());
-      case RoutePaths.settings:
-        return _authGuard(currentUser, SettingsScreen());
       default:
         return _errorRoute();
     }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import '../../core/constants/app_colors.dart';
 class SearchBar extends StatelessWidget {
   final TextEditingController controller;
   final String hintText;
@@ -16,6 +16,7 @@ class SearchBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextField(
       controller: controller,
+      style: TextStyle(color: AppColors.primaryColor),
       decoration: InputDecoration(
         hintText: hintText,
         prefixIcon: Icon(Icons.search),

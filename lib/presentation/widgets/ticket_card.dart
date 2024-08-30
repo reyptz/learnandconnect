@@ -37,7 +37,7 @@ class TicketCard extends StatelessWidget {
                 ticket.description,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: AppColors.lightGrey),
+                style: TextStyle(color: AppColors.primaryColor),
               ),
               SizedBox(height: 16),
               Row(

@@ -1,36 +1,30 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bloc/bloc.dart';
 import 'profile_event.dart';
 import 'profile_state.dart';
 import '../../core/services/firestore_service.dart';
 import '../../data/models/user_model.dart';
+import '../../data/repositories/user_repository.dart';
 
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
-  final FirestoreService _firestoreService;
+  final UserRepository userRepository;
 
-  ProfileBloc(this._firestoreService) : super(ProfileInitial());
+  ProfileBloc({required this.userRepository}) : super(ProfileLoading()) {
+    on<LoadUserProfile>((event, emit) async {
+      try {
+        final user = await userRepository.getUserById(event.userId) as User;
+        emit(ProfileLoaded(user: user));
+      } catch (error) {
+        emit(ProfileError(error: error.toString()));
+      }
+    });
 
-  @override
-  Stream<ProfileState> mapEventToState(ProfileEvent event) async* {
-    if (event is LoadUserProfile) {
-      yield ProfileLoading();
+    on<UpdateUserProfile>((event, emit) async {
       try {
-        final user = await _firestoreService.getUserById(event.userId);
-        if (user != null) {
-          yield ProfileLoaded(user: user);
-        } else {
-          yield ProfileError(message: 'Profil utilisateur non trouvé.');
-        }
-      } catch (e) {
-        yield ProfileError(message: e.toString());
+        await userRepository.updateUser(event.user);
+        emit(ProfileLoaded(user: event.user));
+      } catch (error) {
+        emit(ProfileError(error: error.toString()));
       }
-    } else if (event is UpdateUserProfile) {
-      yield ProfileLoading();
-      try {
-        await _firestoreService.updateUser(event.user);
-        yield ProfileUpdated();
-      } catch (e) {
-        yield ProfileError(message: e.toString());
-      }
-    }
+    });
   }
 }

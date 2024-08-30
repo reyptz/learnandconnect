@@ -22,12 +22,7 @@ class UserCard extends StatelessWidget {
         padding: EdgeInsets.all(16.0),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            CircleAvatar(
-              radius: 30,
-              backgroundImage: NetworkImage(user.profilePictureUrl),
-              backgroundColor: Colors.grey[200],
-            ),
+          children: [            
             SizedBox(width: 16),
             Expanded(
               child: Column(

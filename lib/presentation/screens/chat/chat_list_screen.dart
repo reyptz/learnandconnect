@@ -26,18 +26,16 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Obtenez l'utilisateur actuel
     User? currentUser = _auth.currentUser;
     String? currentUserId = currentUser?.uid;
 
     if (currentUserId == null) {
-      // Si l'utilisateur n'est pas connecté, redirigez-le vers l'écran de connexion
       Future.microtask(() => Navigator.pushReplacementNamed(context, '/login'));
       return Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
     }
-    
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Chat'),
@@ -69,7 +67,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
           ),
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
-              stream: _firestore.collection('chats').where('participants', arrayContains: widget.currentUserId).snapshots(),
+              stream: _firestore.collection('chats')
+                  .where('participants', arrayContains: currentUserId)
+                  .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Center(child: CircularProgressIndicator());
@@ -106,8 +106,8 @@ class _ChatListScreenState extends State<ChatListScreen> {
                           context,
                           '/chat-message',
                           arguments: {
-                            'chatId': chats[index].id,  // Assurez-vous de passer l'ID du chat ici
-                            'currentUserId': widget.currentUserId
+                            'chatId': chats[index].id,
+                            'currentUserId': currentUserId
                           },
                         );
                       },
@@ -124,7 +124,6 @@ class _ChatListScreenState extends State<ChatListScreen> {
   }
 
   void _showCreateChatDialog(BuildContext context) {
-    TextEditingController _chatNameController = TextEditingController();
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -140,9 +139,11 @@ class _ChatListScreenState extends State<ChatListScreen> {
                     decoration: InputDecoration(hintText: 'Nom du chat'),
                   ),
                   SizedBox(height: 16),
-                  Text('Ajouter des participants :', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  Text('Ajouter des participants :',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   SizedBox(height: 8),
-                  Expanded(
+                  Container(
+                    height: 200,
                     child: FutureBuilder<QuerySnapshot>(
                       future: _firestore.collection('users').get(),
                       builder: (context, snapshot) {
@@ -156,35 +157,32 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
                         final users = snapshot.data?.docs ?? [];
 
-                        return SizedBox(
-                          height: 200, // Limitez la hauteur de la liste pour éviter les problèmes de taille
-                          child: ListView.builder(
-                            shrinkWrap: true,
-                            itemCount: users.length,
-                            itemBuilder: (context, index) {
-                              final user = users[index].data() as Map<String, dynamic>;
-                              final userId = users[index].id;
-                              final userName = user['name'] ?? 'Utilisateur';
+                        return ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: users.length,
+                          itemBuilder: (context, index) {
+                            final user = users[index].data() as Map<String, dynamic>;
+                            final userId = users[index].id;
+                            final userName = user['name'] ?? 'Utilisateur';
 
-                              return CheckboxListTile(
-                                title: Text(userName),
-                                value: _selectedUsers.contains(userId),
-                                onChanged: (bool? selected) {
-                                  setState(() {
-                                    if (selected == true) {
-                                      _selectedUsers.add(userId);
-                                    } else {
-                                      _selectedUsers.remove(userId);
-                                    }
-                                  });
-                                },
-                              );
-                            },
-                          ),
+                            return CheckboxListTile(
+                              title: Text(userName),
+                              value: _selectedUsers.contains(userId),
+                              onChanged: (bool? selected) {
+                                setState(() {
+                                  if (selected == true) {
+                                    _selectedUsers.add(userId);
+                                  } else {
+                                    _selectedUsers.remove(userId);
+                                  }
+                                });
+                              },
+                            );
+                          },
                         );
                       },
                     ),
-                  ),
+                  )
                 ],
               ),
               actions: [
@@ -199,42 +197,55 @@ class _ChatListScreenState extends State<ChatListScreen> {
                   onPressed: () async {
                     if (_chatNameController.text.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Le nom du chat ne peut pas être vide')),
+                        SnackBar(
+                            content: Text('Le nom du chat ne peut pas être vide')),
                       );
                       return;
                     }
 
                     if (_selectedUsers.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Veuillez sélectionner au moins un participant')),
+                        SnackBar(
+                            content: Text(
+                                'Veuillez sélectionner au moins un participant')),
                       );
                       return;
                     }
 
                     try {
-                      _selectedUsers.add(widget.currentUserId);  // Ajouter l'utilisateur actuel aux participants
-                      final chatId = _firestore.collection('chats').doc().id;  // Générer un ID de chat unique
+                      _selectedUsers.add(widget
+                          .currentUserId); // Ajouter l'utilisateur actuel aux participants
+                      final chatId = _firestore
+                          .collection('chats')
+                          .doc()
+                          .id; // Générer un ID de chat unique
 
                       await _firestore.collection('chats').doc(chatId).set({
                         'chat_name': _chatNameController.text,
-                        'participants': _selectedUsers,
+                        'participants': _selectedUsers.toList(),
                         'created_at': FieldValue.serverTimestamp(),
                         'last_message_at': FieldValue.serverTimestamp(),
                       });
 
-                      _chatNameController.clear();  // Nettoyer le contrôleur après la création
+                      _chatNameController.clear(); // Nettoyer le contrôleur après la création
 
-                      Navigator.of(context).pop();  // Fermer la boîte de dialogue
+                      Navigator.of(context).pop(); // Fermer la boîte de dialogue
 
                       Navigator.pushNamed(
                         context,
                         '/chat-detail',
-                        arguments: {'chatId': chatId, 'currentUserId': widget.currentUserId},
+                        arguments: {
+                          'chatId': chatId,
+                          'currentUserId': widget.currentUserId
+                        },
                       );
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Erreur lors de la création du chat')),
+                        SnackBar(
+                            content: Text(
+                                'Erreur lors de la création du chat: $e')),
                       );
+                      print(e.toString());
                     }
                   },
                 ),
@@ -270,7 +281,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
           label: 'Profil',
         ),
       ],
-      currentIndex: 3,  // Index actuel pour l'écran de chat
+      currentIndex: 3, // Index actuel pour l'écran de chat
       onTap: (index) {
         switch (index) {
           case 0:
@@ -299,9 +310,13 @@ class _ChatListScreenState extends State<ChatListScreen> {
     }
     final dateTime = timestamp.toDate();
     final now = DateTime.now();
-    if (dateTime.year == now.year && dateTime.month == now.month && dateTime.day == now.day) {
+    if (dateTime.year == now.year &&
+        dateTime.month == now.month &&
+        dateTime.day == now.day) {
       return DateFormat('HH:mm').format(dateTime);
-    } else if (dateTime.year == now.year && dateTime.month == now.month && now.day - dateTime.day == 1) {
+    } else if (dateTime.year == now.year &&
+        dateTime.month == now.month &&
+        now.day - dateTime.day == 1) {
       return 'Hier';
     } else {
       return DateFormat('dd/MM/yyyy').format(dateTime);

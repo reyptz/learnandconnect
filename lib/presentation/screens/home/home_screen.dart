@@ -11,6 +11,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  int _currentIndex = 0;
 
   @override
   void initState() {
@@ -106,30 +107,30 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
+        items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
+            icon: Icon(Icons.home, color: _currentIndex == 0 ? AppColors.primaryColor : AppColors.Colorabs),
             label: 'Accueil',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.assignment),
+            icon: Icon(Icons.assignment, color: _currentIndex == 1 ? AppColors.primaryColor : AppColors.Colorabs),
             label: 'Ticket',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.notifications),
+            backgroundColor: AppColors.primaryColor,
+            icon: Icon(Icons.notifications, color: _currentIndex == 2 ? AppColors.backgroundColor : AppColors.Colorabs),
             label: 'Notifications',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.chat),
-            label: 'Chat',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
+            icon: Icon(Icons.person, color: _currentIndex == 3 ? AppColors.primaryColor : AppColors.Colorabs),
             label: 'Profil',
           ),
         ],
-        currentIndex: 0, // Assurez-vous de mettre à jour cet index pour les autres pages
+        currentIndex: _currentIndex, // Utilisez la variable d'état pour l'index actif
         onTap: (index) {
+          setState(() {
+            _currentIndex = index; // Mettre à jour l'index sélectionné
+          });
           // Gérer la navigation entre les différentes pages
           switch (index) {
             case 0:
@@ -142,9 +143,6 @@ class _HomeScreenState extends State<HomeScreen> {
               Navigator.pushReplacementNamed(context, '/notifications');
               break;
             case 3:
-              Navigator.pushReplacementNamed(context, '/chat');
-              break;
-            case 4:
               Navigator.pushReplacementNamed(context, '/profile');
               break;
           }

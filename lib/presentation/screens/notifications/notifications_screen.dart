@@ -4,8 +4,10 @@ import '../../../blocs/notification/notification_bloc.dart';
 import '../../../blocs/notification/notification_event.dart';
 import '../../../blocs/notification/notification_state.dart';
 import '../../widgets/notification_card.dart';
+import '../../../core/constants/app_colors.dart';
 
 class NotificationsScreen extends StatelessWidget {
+  int _currentIndex = 0;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,31 +40,35 @@ class NotificationsScreen extends StatelessWidget {
           }
         },
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
+      /*bottomNavigationBar: BottomNavigationBar(
+        items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
+            icon: Icon(Icons.home, color: _currentIndex == 0 ? AppColors.primaryColor : AppColors.Colorabs),
             label: 'Accueil',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.assignment),
+            icon: Icon(Icons.assignment, color: _currentIndex == 1 ? AppColors.primaryColor : AppColors.Colorabs),
             label: 'Ticket',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.notifications),
+            backgroundColor: AppColors.primaryColor,
+            icon: Icon(Icons.notifications, color: _currentIndex == 2 ? AppColors.backgroundColor : AppColors.Colorabs),
             label: 'Notifications',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.chat),
+            icon: Icon(Icons.chat, color: _currentIndex == 3 ? AppColors.primaryColor : AppColors.Colorabs),
             label: 'Chat',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
+            icon: Icon(Icons.person, color: _currentIndex == 4 ? AppColors.primaryColor : AppColors.Colorabs),
             label: 'Profil',
           ),
         ],
-        currentIndex: 0, // Assurez-vous de mettre à jour cet index pour les autres pages
+        currentIndex: _currentIndex, // Utilisez la variable d'état pour l'index actif
         onTap: (index) {
+          setState(() {
+            _currentIndex = index; // Mettre à jour l'index sélectionné
+          });
           // Gérer la navigation entre les différentes pages
           switch (index) {
             case 0:
@@ -82,7 +88,7 @@ class NotificationsScreen extends StatelessWidget {
               break;
           }
         },
-      ),
+      ),*/
     );
   }
 }

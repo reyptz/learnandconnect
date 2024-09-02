@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/services/auth_service.dart';
+import '../../../core/constants/app_colors.dart';
 
 class CreateTicketScreen extends StatefulWidget {
   @override
@@ -19,6 +20,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   final AuthService _authService = AuthService(); // Initialisation de AuthService
+  int _currentIndex = 0;
 
 
   void _submitTicket() async {
@@ -118,30 +120,30 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
+        items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
+            icon: Icon(Icons.home, color: _currentIndex == 0 ? AppColors.primaryColor : AppColors.Colorabs),
             label: 'Accueil',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.assignment),
+            icon: Icon(Icons.assignment, color: _currentIndex == 1 ? AppColors.primaryColor : AppColors.Colorabs),
             label: 'Ticket',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.notifications),
+            backgroundColor: AppColors.primaryColor,
+            icon: Icon(Icons.notifications, color: _currentIndex == 2 ? AppColors.backgroundColor : AppColors.Colorabs),
             label: 'Notifications',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.chat),
-            label: 'Chat',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
+            icon: Icon(Icons.person, color: _currentIndex == 3 ? AppColors.primaryColor : AppColors.Colorabs),
             label: 'Profil',
           ),
         ],
-        currentIndex: 1, // L'index actuel pour la page des tickets
+        currentIndex: _currentIndex, // Utilisez la variable d'état pour l'index actif
         onTap: (index) {
+          setState(() {
+            _currentIndex = index; // Mettre à jour l'index sélectionné
+          });
           // Gérer la navigation entre les différentes pages
           switch (index) {
             case 0:
@@ -154,9 +156,6 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
               Navigator.pushReplacementNamed(context, '/notifications');
               break;
             case 3:
-              Navigator.pushReplacementNamed(context, '/chat');
-              break;
-            case 4:
               Navigator.pushReplacementNamed(context, '/profile');
               break;
           }

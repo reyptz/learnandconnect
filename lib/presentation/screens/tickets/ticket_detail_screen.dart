@@ -1,23 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
-import 'package:learnandconnect/presentation/screens/tickets/ticket_edit_screen.dart'; // Assurez-vous d'importer le package intl pour le formatage des dates
+import 'package:learnandconnect/presentation/screens/tickets/ticket_edit_screen.dart'; 
+import '../../../core/constants/app_colors.dart';
 
-class TicketDetailScreen extends StatelessWidget {
+class TicketDetailScreen extends StatefulWidget {
   final String ticketId;
 
   const TicketDetailScreen({Key? key, required this.ticketId}) : super(key: key);
 
   @override
+  _TicketDetailScreenState createState() => _TicketDetailScreenState();
+}
+
+class _TicketDetailScreenState extends State<TicketDetailScreen> {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  int _currentIndex = 0;
+
+  void _deleteTicket() async {
+    await _firestore.collection('tickets').doc(widget.ticketId).delete();
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ticket supprimé avec succès!')));
+    Navigator.pop(context);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
-    void _deleteTicket() async {
-      await _firestore.collection('tickets').doc(ticketId).delete();
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ticket supprimé avec succès!')));
-      Navigator.pop(context);
-    }
-
     return Scaffold(
       appBar: AppBar(
         title: Text('Détails du ticket'),
@@ -31,7 +38,7 @@ class TicketDetailScreen extends StatelessWidget {
         ],
       ),
       body: FutureBuilder<DocumentSnapshot>(
-        future: _firestore.collection('tickets').doc(ticketId).get(),
+        future: _firestore.collection('tickets').doc(widget.ticketId).get(),
         builder: (context, ticketSnapshot) {
           if (ticketSnapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
@@ -76,30 +83,30 @@ class TicketDetailScreen extends StatelessWidget {
         },
       ),
       bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
+        items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
+            icon: Icon(Icons.home, color: _currentIndex == 0 ? AppColors.primaryColor : AppColors.Colorabs),
             label: 'Accueil',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.assignment),
+            icon: Icon(Icons.assignment, color: _currentIndex == 1 ? AppColors.primaryColor : AppColors.Colorabs),
             label: 'Ticket',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.notifications),
+            backgroundColor: AppColors.primaryColor,
+            icon: Icon(Icons.notifications, color: _currentIndex == 2 ? AppColors.backgroundColor : AppColors.Colorabs),
             label: 'Notifications',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.chat),
-            label: 'Chat',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
+            icon: Icon(Icons.person, color: _currentIndex == 3 ? AppColors.primaryColor : AppColors.Colorabs),
             label: 'Profil',
           ),
         ],
-        currentIndex: 0, // Assurez-vous de mettre à jour cet index pour les autres pages
+        currentIndex: _currentIndex, // Utilisez la variable d'état pour l'index actif
         onTap: (index) {
+          setState(() {
+            _currentIndex = index; // Mettre à jour l'index sélectionné
+          });
           // Gérer la navigation entre les différentes pages
           switch (index) {
             case 0:
@@ -112,9 +119,6 @@ class TicketDetailScreen extends StatelessWidget {
               Navigator.pushReplacementNamed(context, '/notifications');
               break;
             case 3:
-              Navigator.pushReplacementNamed(context, '/chat');
-              break;
-            case 4:
               Navigator.pushReplacementNamed(context, '/profile');
               break;
           }
@@ -123,7 +127,6 @@ class TicketDetailScreen extends StatelessWidget {
     );
   }
 
-  // Fonction pour construire les détails du ticket avec le nom de l'utilisateur assigné
   Widget _buildTicketDetails(BuildContext context, Map<String, dynamic> ticket, {required String assignedToName}) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -178,7 +181,7 @@ class TicketDetailScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => EditTicketScreen(ticketId: ticketId),
+                    builder: (context) => EditTicketScreen(ticketId: widget.ticketId),
                   ),
                 );
               },
@@ -190,7 +193,6 @@ class TicketDetailScreen extends StatelessWidget {
     );
   }
 
-  // Fonction pour formater les timestamps
   String _formatTimestamp(Timestamp? timestamp) {
     if (timestamp == null) {
       return 'N/A';

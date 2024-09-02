@@ -8,4 +8,5 @@ class AppColors {
   static const Color accentColor = Color(0xFFEA4335); // Couleur d'accent (rouge)
   static const Color lightGrey = Color(0xFFBDBDBD); // Gris clair pour les bordures ou les arrière-plans
   static const Color darkGrey = Color(0xFF616161); // Gris foncé pour le texte ou les icônes désactivées
+  static const Color Colorabs = Color(0xFFFC8852);
 }

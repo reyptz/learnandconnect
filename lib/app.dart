@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:learnandconnect/presentation/screens/notifications/notifications_screen.dart';
 import './routes/app_router.dart';
 import './core/constants/app_themes.dart';
 import 'blocs/auth/auth_bloc.dart';
@@ -26,6 +27,7 @@ class App extends StatelessWidget {
         themeMode: ThemeMode.light,
         initialRoute: '/login',  // Définit la route initiale de l'application
         onGenerateRoute: _appRouter.generateRoute,  // Utilise AppRouter pour générer les routes
+        home: NotificationsScreen(),
       ),
     );
   }

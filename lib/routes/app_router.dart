@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:learnandconnect/presentation/screens/tickets/ticket_chat_screen.dart';
 import '../presentation/screens/auth/password_reset_confirmation_screen.dart';
 import '../presentation/screens/auth/forgot_password_screen.dart';
-import '../presentation/screens/chat/chat_list_screen.dart';
-import '../presentation/screens/chat/chat_screen.dart';
 import '../presentation/screens/home/dashboard_screen.dart';
 import '../presentation/screens/users/report_generation_screen.dart';
 import '../presentation/screens/tickets/ticket_create_screen.dart';
@@ -64,6 +63,9 @@ class AppRouter {
       case RoutePaths.ticketReply:
         final ticketId = settings.arguments as String;
         return _authGuard(currentUser, TicketReplyScreen(ticketId: ticketId));
+      case RoutePaths.chat:
+        final ticketId = settings.arguments as String;
+        return _authGuard(currentUser, ChatScreen(ticketId: ticketId));
       case RoutePaths.profile:
         return _authGuard(currentUser, ProfileScreen());
       case RoutePaths.report:
@@ -72,14 +74,14 @@ class AppRouter {
         return _authGuard(currentUser, DashboardScreen());
       case RoutePaths.users:
         return _authGuard(currentUser, UsersScreen());
-      case RoutePaths.chat:
+    /*case RoutePaths.chat:
         final currentUserId = settings.arguments as String? ?? '';
         return _authGuard(currentUser, ChatListScreen(currentUserId: currentUserId));
       case RoutePaths.chatMessage:
         final arguments = settings.arguments as Map<String, String>? ?? {};
         final currentUserId = arguments['currentUserId'] ?? '';
         final chatId = arguments['chatId'] ?? '';
-        return _authGuard(currentUser, ChatScreen(currentUserId: currentUserId, chatId: chatId));
+        return _authGuard(currentUser, ChatScreen(currentUserId: currentUserId, chatId: chatId));*/
       case RoutePaths.notifications:
         return _authGuard(currentUser, NotificationsScreen());
       default:

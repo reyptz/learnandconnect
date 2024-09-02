@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../core/services/auth_service.dart';
+import '../../../core/constants/app_colors.dart';
 
 class ChatScreen extends StatefulWidget {
-  final String chatId;
-  final String currentUserId;
 
-  ChatScreen({required this.chatId, required this.currentUserId});
+  final String ticketId;
+
+  ChatScreen({required this.ticketId});
 
   @override
   _ChatScreenState createState() => _ChatScreenState();
@@ -14,38 +16,41 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final AuthService _authService = AuthService();
+  String? currentUserId;
+  int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    currentUserId = _authService.getCurrentUserId();
+  }
 
   void _sendMessage() async {
     if (_messageController.text.isEmpty) return;
 
-    await _firestore.collection('chats').doc(widget.chatId).collection('messages').add({
-      'sender_id': widget.currentUserId,
+    final chatDocRef = _firestore.collection('tickets').doc(widget.ticketId).collection('chats').doc();
+
+    await chatDocRef.set({
       'message_text': _messageController.text,
       'sent_at': FieldValue.serverTimestamp(),
-      'attachments': [],
+      'sender_name': currentUserId, // This would typically be the user name
     });
 
     _messageController.clear();
-
-    await _firestore.collection('chats').doc(widget.chatId).update({
-      'last_message_at': FieldValue.serverTimestamp(),
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Chat'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
+        title: Text('Chat du ticket'),
       ),
       body: Column(
         children: [
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
-              stream: _firestore.collection('chats').doc(widget.chatId).collection('messages').orderBy('sent_at').snapshots(),
+              stream: _firestore.collection('tickets').doc(widget.ticketId).collection('chats').orderBy('sent_at').snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Center(child: CircularProgressIndicator());
@@ -60,8 +65,8 @@ class _ChatScreenState extends State<ChatScreen> {
                 return ListView.builder(
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
-                    final message = messages[index].data() as Map<String, dynamic>;
-                    final isCurrentUser = message['sender_id'] == widget.currentUserId;
+                    final messageData = messages[index].data() as Map<String, dynamic>;
+                    final isCurrentUser = messageData['sender_name'] == currentUserId;
 
                     return Align(
                       alignment: isCurrentUser ? Alignment.centerRight : Alignment.centerLeft,
@@ -73,7 +78,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          message['message_text'],
+                          messageData['message_text'],
                           style: TextStyle(color: isCurrentUser ? Colors.white : Colors.black),
                         ),
                       ),
@@ -108,30 +113,34 @@ class _ChatScreenState extends State<ChatScreen> {
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
+        items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
+            icon: Icon(Icons.home, color: _currentIndex == 0 ? AppColors.primaryColor : AppColors.Colorabs),
             label: 'Accueil',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.assignment),
+            icon: Icon(Icons.assignment, color: _currentIndex == 1 ? AppColors.primaryColor : AppColors.Colorabs),
             label: 'Ticket',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.notifications),
+            backgroundColor: AppColors.primaryColor,
+            icon: Icon(Icons.notifications, color: _currentIndex == 2 ? AppColors.backgroundColor : AppColors.Colorabs),
             label: 'Notifications',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.chat),
+            icon: Icon(Icons.chat, color: _currentIndex == 3 ? AppColors.primaryColor : AppColors.Colorabs),
             label: 'Chat',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
+            icon: Icon(Icons.person, color: _currentIndex == 4 ? AppColors.primaryColor : AppColors.Colorabs),
             label: 'Profil',
           ),
         ],
-        currentIndex: 3,
+        currentIndex: _currentIndex,
         onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
           switch (index) {
             case 0:
               Navigator.pushReplacementNamed(context, '/');

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/services/auth_service.dart';
+import '../../../core/constants/app_colors.dart';
 
 class TicketListScreen extends StatefulWidget {
   @override
@@ -11,6 +12,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final AuthService _authService = AuthService();
   String? userId;
+  int _currentIndex = 0;
 
   @override
   void initState() {
@@ -82,6 +84,10 @@ class _TicketListScreenState extends State<TicketListScreen> {
                       return TicketCard(
                         title: ticket['title'],
                         status: ticket['status'],
+                        onChatPressed: () {
+                          Navigator.pushNamed(context, '/ticket-chat',
+                              arguments: ticket.id);
+                        },
                         onDetailsPressed: () {
                           Navigator.pushNamed(context, '/ticket-detail',
                               arguments: ticket.id);
@@ -104,31 +110,30 @@ class _TicketListScreenState extends State<TicketListScreen> {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
+        items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
+            icon: Icon(Icons.home, color: _currentIndex == 0 ? AppColors.primaryColor : AppColors.Colorabs),
             label: 'Accueil',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.assignment),
+            icon: Icon(Icons.assignment, color: _currentIndex == 1 ? AppColors.primaryColor : AppColors.Colorabs),
             label: 'Ticket',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.notifications),
+            backgroundColor: AppColors.primaryColor,
+            icon: Icon(Icons.notifications, color: _currentIndex == 2 ? AppColors.backgroundColor : AppColors.Colorabs),
             label: 'Notifications',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.chat),
-            label: 'Chat',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
+            icon: Icon(Icons.person, color: _currentIndex == 3 ? AppColors.primaryColor : AppColors.Colorabs),
             label: 'Profil',
           ),
         ],
-        currentIndex: 1,
-        // Mise à jour de l'index actuel pour la page des tickets
+        currentIndex: _currentIndex, // Utilisez la variable d'état pour l'index actif
         onTap: (index) {
+          setState(() {
+            _currentIndex = index; // Mettre à jour l'index sélectionné
+          });
           // Gérer la navigation entre les différentes pages
           switch (index) {
             case 0:
@@ -141,9 +146,6 @@ class _TicketListScreenState extends State<TicketListScreen> {
               Navigator.pushReplacementNamed(context, '/notifications');
               break;
             case 3:
-              Navigator.pushReplacementNamed(context, '/chat');
-              break;
-            case 4:
               Navigator.pushReplacementNamed(context, '/profile');
               break;
           }
@@ -159,6 +161,7 @@ class TicketCard extends StatelessWidget {
   final VoidCallback onDetailsPressed;
   final VoidCallback onHistoryPressed;
   final VoidCallback onResponsePressed;
+  final VoidCallback onChatPressed;
 
   const TicketCard({
     Key? key,
@@ -167,6 +170,7 @@ class TicketCard extends StatelessWidget {
     required this.onDetailsPressed,
     required this.onHistoryPressed,
     required this.onResponsePressed,
+    required this.onChatPressed,
   }) : super(key: key);
 
   @override
@@ -185,6 +189,11 @@ class TicketCard extends StatelessWidget {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            IconButton(
+              onPressed: onChatPressed,
+              icon: Icon(Icons.chat, color: Colors.orange),
+              tooltip: 'Voir le chat',
+            ),
             IconButton(
               onPressed: onDetailsPressed,
               icon: Icon(Icons.details, color: Colors.orange),

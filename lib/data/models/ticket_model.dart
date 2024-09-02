@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class Ticket {
   String ticketId; // Firestore Auto-generated ID
   String userId; // Reference to users/user_id
-  String categoryId; // Reference to categories/category_id
+  String categoryId; // Reference to categories/category
   String title;
   String description;
   String status; // Enum: "Attente", "En cours", "Résolu"
@@ -32,7 +32,7 @@ class Ticket {
     return Ticket(
       ticketId: doc.id,
       userId: data['user_id'],
-      categoryId: data['category_id'],
+      categoryId: data['category'],
       title: data['title'],
       description: data['description'],
       status: data['status'],
@@ -49,7 +49,7 @@ class Ticket {
   Map<String, dynamic> toFirestore() {
     return {
       'user_id': userId,
-      'category_id': categoryId,
+      'category': categoryId,
       'title': title,
       'description': description,
       'status': status,
@@ -120,6 +120,51 @@ class TicketHistory {
       'status': status,
       'changed_by': changedBy,
       'changed_at': changedAt,
+    };
+  }
+}
+
+class Chat {
+  String chatId; // Firestore Auto-generated ID
+  String messageText;
+  DateTime sentAt;
+  String senderName;
+
+  Chat({
+    required this.chatId,
+    required this.messageText,
+    required this.sentAt,
+    required this.senderName,
+  });
+
+  // Convertir un DocumentSnapshot Firestore en instance de Message
+  factory Chat.fromFirestore(DocumentSnapshot doc) {
+    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+    return Chat(
+      chatId: data['chat_id'] ?? '',
+      messageText: data['message_text'] ?? '',
+      sentAt: (data['sent_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      senderName: data['sender_name'] ?? '',
+    );
+  }
+
+  /// Méthode pour créer une instance de Message à partir d'une Map (généralement extraite de Firestore)
+  factory Chat.fromMap(Map<String, dynamic> data) {
+    return Chat(
+      chatId: data['chat_id'] ?? '',
+      messageText: data['message_text'] ?? '',
+      sentAt: (data['sent_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      senderName: data['sender_name'] ?? '',
+    );
+  }
+
+  // Convertir une instance de Message en Map pour Firestore
+  Map<String, dynamic> toMap() {
+    return {
+      'chat_id': chatId,
+      'message_text': messageText,
+      'sent_at': sentAt,
+      'sender_name': senderName,
     };
   }
 }

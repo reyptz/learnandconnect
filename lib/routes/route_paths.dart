@@ -17,8 +17,7 @@ class RoutePaths {
   static const String report = '/report';
   static const String dashboard = '/dashboard';
   static const String profile = '/profile';
-  static const String chat = '/chat';
-  static const String chatMessage = '/chat-message';
+  static const String chat = '/ticket-chat';
   static const String notifications = '/notifications';
   static const String users = '/users';
 

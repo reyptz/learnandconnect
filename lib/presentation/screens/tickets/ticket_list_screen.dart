@@ -25,9 +25,9 @@ class _TicketListScreenState extends State<TicketListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Tickets'),
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.primaryColor,
         elevation: 0,
-        centerTitle: true,
+        centerTitle: false,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

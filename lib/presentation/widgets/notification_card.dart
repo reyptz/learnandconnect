@@ -1,65 +1,58 @@
 import 'package:flutter/material.dart';
 import 'package:learnandconnect/data/models/notification_model.dart' as custom;
+import '../../../core/constants/app_colors.dart';
 
 class NotificationCard extends StatelessWidget {
   final custom.Notification notification; // Utilisation de l'alias 'custom'
-  final VoidCallback onMarkAsRead;
+  final VoidCallback onDelete;
 
   const NotificationCard({
     Key? key,
     required this.notification,
-    required this.onMarkAsRead,
+    required this.onDelete,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      child: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildIcon(notification.notificationType),
-            SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    notification.notificationText,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 8),
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.primaryColor, // Main color for the notification background
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  notification.notificationText,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
                   ),
-                  SizedBox(height: 8),
-                  Text(
-                    _formatDate(notification.createdAt),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (!notification.isRead)
-              TextButton(
-                onPressed: onMarkAsRead,
-                child: Text(
-                  'Marquer comme lu',
-                  style: TextStyle(color: Colors.blue),
                 ),
-              ),
-            if (notification.isRead)
-              Icon(
-                Icons.check_circle,
-                color: Colors.green,
-              ),
-          ],
-        ),
+                SizedBox(height: 8),
+                Text(
+                  _formatDate(notification.createdAt),
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(width: 8),
+          GestureDetector(
+            onTap: onDelete,
+            child: Icon(Icons.delete, color: Colors.white, size: 24),
+          ),
+        ],
       ),
     );
   }
@@ -67,11 +60,11 @@ class NotificationCard extends StatelessWidget {
   Widget _buildIcon(String notificationType) {
     switch (notificationType) {
       case "Push":
-        return Icon(Icons.notifications, color: Colors.blue);
+        return Icon(Icons.notifications, color: AppColors.primaryColor);
       case "Email":
-        return Icon(Icons.email, color: Colors.orange);
+        return Icon(Icons.email, color: AppColors.primaryColor);
       default:
-        return Icon(Icons.info, color: Colors.grey);
+        return Icon(Icons.info, color: AppColors.primaryColor);
     }
   }
 

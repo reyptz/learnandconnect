@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:learnandconnect/presentation/screens/tickets/ticket_edit_screen.dart'; 
 import '../../../core/constants/app_colors.dart';
@@ -15,7 +16,35 @@ class TicketDetailScreen extends StatefulWidget {
 
 class _TicketDetailScreenState extends State<TicketDetailScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
   int _currentIndex = 0;
+
+  bool _canEditOrDelete = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkPermission();
+  }
+
+  Future<void> _checkPermission() async {
+    final user = _auth.currentUser;
+    if (user != null) {
+      final ticketSnapshot = await _firestore.collection('tickets').doc(widget.ticketId).get();
+      if (ticketSnapshot.exists) {
+        final ticketData = ticketSnapshot.data() as Map<String, dynamic>;
+        final String ticketOwnerId = ticketData['user_id']; // Assurez-vous que l'ID du créateur du ticket est stocké sous cette clé
+        final userSnapshot = await _firestore.collection('users').doc(user.uid).get();
+        final userData = userSnapshot.data() as Map<String, dynamic>;
+        final String userRole = userData['role'] ?? 'Apprenant';
+
+        setState(() {
+          // Autoriser la modification/suppression si l'utilisateur est le créateur ou s'il n'est pas un Apprenant
+          _canEditOrDelete = userRole != 'Apprenant' || ticketOwnerId == user.uid;
+        });
+      }
+    }
+  }
 
   void _deleteTicket() async {
     await _firestore.collection('tickets').doc(widget.ticketId).delete();
@@ -28,14 +57,16 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Détails du ticket'),
-        actions: [
+        actions: _canEditOrDelete
+            ? [
           IconButton(
             icon: Icon(Icons.delete),
             onPressed: () {
               _showDeleteConfirmationDialog(context, _deleteTicket);
             },
           ),
-        ],
+        ]
+            : null,
       ),
       body: FutureBuilder<DocumentSnapshot>(
         future: _firestore.collection('tickets').doc(widget.ticketId).get(),
@@ -55,7 +86,8 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
           final ticket = ticketSnapshot.data!.data() as Map<String, dynamic>;
           final String? assignedToId = ticket['assigned_to'];
 
-          if (assignedToId == null) {
+          // Vérifier si assignedToId est vide ou null avant de tenter de récupérer les détails de l'utilisateur
+          if (assignedToId == null || assignedToId.isEmpty) {
             return _buildTicketDetails(context, ticket, assignedToName: 'Non assigné');
           }
 
@@ -75,7 +107,7 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
               }
 
               final user = userSnapshot.data!.data() as Map<String, dynamic>;
-              final String assignedToName = '${user['first_name']} ${user['last_name']}';
+              final String assignedToName = '${user['name']}';
 
               return _buildTicketDetails(context, ticket, assignedToName: assignedToName);
             },

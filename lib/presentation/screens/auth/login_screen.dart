@@ -22,9 +22,10 @@ class LoginScreen extends StatelessWidget {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.message)),
             );
-          } else if (state is AuthSuccess) {
-            //Navigator.pushReplacementNamed(context, '/');
+          } else if (state is AuthRedirectToDashboard) {
             Navigator.pushReplacementNamed(context, '/dashboard');
+          } else if (state is AuthRedirectToHome) {
+            Navigator.pushReplacementNamed(context, '/');
           }
         },
         child: Padding(

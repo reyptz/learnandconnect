@@ -23,8 +23,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final firebase_auth.User? user = await _authService.signIn(event.email, event.password);
       if (user != null) {
         // Récupérer les données utilisateur depuis Firestore après la connexion
-        final userData = await _authService.getUserData();
-        emit(AuthSuccess(user: user, userData: userData.data()));
+        final userData = await _authService.getUserData2(user.uid);
+        final role = userData['role'] ?? 'Apprenant';
+
+        // Redirection basée sur le rôle
+        if (role == 'Admin') {
+          emit(AuthRedirectToDashboard(user: user));
+        } else {
+          emit(AuthRedirectToHome(user: user));
+        }
       } else {
         emit(AuthFailure(message: 'Connexion échouée. Veuillez vérifier vos identifiants.'));
       }

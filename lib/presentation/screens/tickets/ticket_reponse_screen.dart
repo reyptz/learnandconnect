@@ -15,14 +15,57 @@ class ReponseTicketScreen extends StatefulWidget {
 
 class _ReponseTicketScreenState extends State<ReponseTicketScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final AuthService _authService =
-      AuthService(); // Utilisation d'AuthService pour obtenir userId
+  final AuthService _authService = AuthService(); // Utilisation d'AuthService pour obtenir userId
+  String currentUserRole = 'User'; // Le rôle de l'utilisateur connecté
+  String? currentUserId; // L'ID de l'utilisateur connecté
   int _currentIndex = 0;
 
-  void _updateStatus(String status) async {
-    final userId = _authService
-        .getCurrentUserId(); // Récupérer l'ID de l'utilisateur actuel
+  @override
+  void initState() {
+    super.initState();
+    currentUserId = _authService.getCurrentUserId();
+    _getUserRole();
+  }
 
+  Future<void> _getUserRole() async {
+    if (currentUserId != null) {
+      DocumentSnapshot userDoc =
+      await _firestore.collection('users').doc(currentUserId).get();
+      setState(() {
+        currentUserRole = userDoc['role'] ?? 'User';
+      });
+    }
+  }
+
+  void _updateStatusAndAssignTicket(String status) async {
+    final userId = _authService.getCurrentUserId(); // Récupérer l'ID de l'utilisateur actuel
+
+    // Mise à jour du ticket avec le nouveau statut et l'assignation
+    await _firestore.collection('tickets').doc(widget.ticketId).update({
+      'status': status,
+      'assigned_to': userId, // Assigner le ticket à l'utilisateur actuel
+      'updated_at': FieldValue.serverTimestamp(),
+    });
+
+    // Enregistrer l'historique de la modification du statut
+    await _firestore
+        .collection('tickets')
+        .doc(widget.ticketId)
+        .collection('history')
+        .add({
+      'status': status,
+      'changed_by': userId,
+      'changed_at': FieldValue.serverTimestamp(),
+    });
+
+    // Rediriger vers le formulaire de réponse après l'assignation
+    Navigator.pushReplacementNamed(context, '/ticket-reply', arguments: widget.ticketId);
+  }
+
+  void _updateStatus(String status) async {
+    final userId = _authService.getCurrentUserId(); // Récupérer l'ID de l'utilisateur actuel
+
+    // Mise à jour du ticket avec le nouveau statut et l'assignation
     await _firestore.collection('tickets').doc(widget.ticketId).update({
       'status': status,
       'assigned_to': userId, // Assigner le ticket à l'utilisateur actuel
@@ -71,41 +114,29 @@ class _ReponseTicketScreenState extends State<ReponseTicketScreen> {
               children: [
                 Text(ticket['title']),
                 SizedBox(height: 16),
-                Text('Description',
-                    style:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                Text('Description', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 SizedBox(height: 8),
                 Text(ticket['description']),
                 SizedBox(height: 16),
-                Text('Priorité: ${ticket['priority']}',
-                    style: TextStyle(fontSize: 18)),
+                Text('Priorité: ${ticket['priority']}', style: TextStyle(fontSize: 18)),
                 SizedBox(height: 16),
-                Text('Statut actuel: ${ticket['status']}',
-                    style: TextStyle(fontSize: 18)),
+                Text('Statut actuel: ${ticket['status']}', style: TextStyle(fontSize: 18)),
                 SizedBox(height: 16),
-                if (ticket['status'] == 'Attente') ...[
+                // Si l'utilisateur n'est pas un Apprenant, montrer les boutons
+                if (ticket['status'] == 'Attente' && ticket['assigned_to'].isEmpty && currentUserRole != 'Apprenant') ...[
                   ElevatedButton(
-                    onPressed: () => _updateStatus('En cours'),
+                    onPressed: () => _updateStatusAndAssignTicket('En cours'),
                     child: Text('Prise en charge'),
                   ),
                 ],
-                if (ticket['status'] == 'En cours') ...[
+                if (ticket['status'] == 'En cours' && ticket['assigned_to'] == currentUserId && currentUserRole != 'Apprenant') ...[
                   ElevatedButton(
                     onPressed: () => _updateStatus('Résolu'),
                     child: Text('Traiter'),
                   ),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/ticket-reply',
-                          arguments: widget.ticketId);
-                    },
-                    child: Text('Répondre'),
-                  ),
                 ],
                 SizedBox(height: 16),
-                Text('Réponses précédentes',
-                    style:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                Text('Réponses précédentes', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 SizedBox(height: 8),
                 Expanded(
                   child: StreamBuilder<QuerySnapshot>(
@@ -134,12 +165,10 @@ class _ReponseTicketScreenState extends State<ReponseTicketScreen> {
                       return ListView.builder(
                         itemCount: responses.length,
                         itemBuilder: (context, index) {
-                          final response =
-                              responses[index].data() as Map<String, dynamic>;
+                          final response = responses[index].data() as Map<String, dynamic>;
                           return ListTile(
                             subtitle: Text(response['response_text']),
-                            trailing: Text(DateFormat('dd/MM/yyyy à HH:mm')
-                                .format(response['created_at'].toDate())),
+                            trailing: Text(DateFormat('dd/MM/yyyy à HH:mm').format(response['created_at'].toDate())),
                           );
                         },
                       );

@@ -90,12 +90,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         ticketId: ticket['ticket_id'],
                         title: ticket['title'],
                         status: ticket['category'],
+                        onChatPressed: () {
+                          Navigator.pushNamed(context, '/ticket-chat', arguments: ticket.id);
+                        },
                         onDetailsPressed: () {
-                          Navigator.pushNamed(
-                            context,
-                            '/ticket-detail',
-                            arguments: ticket.id,
-                          );
+                          Navigator.pushNamed(context, '/ticket-detail', arguments: ticket.id,);
+                        },
+                        onResponsePressed: () {
+                          Navigator.pushNamed(context, '/ticket-reponse', arguments: ticket.id);
                         },
                       );
                     },
@@ -157,6 +159,8 @@ class TicketCard extends StatelessWidget {
   final String title;
   final String status;
   final VoidCallback onDetailsPressed;
+  final VoidCallback onResponsePressed;
+  final VoidCallback onChatPressed;
 
   const TicketCard({
     Key? key,
@@ -164,6 +168,8 @@ class TicketCard extends StatelessWidget {
     required this.title,
     required this.status,
     required this.onDetailsPressed,
+    required this.onResponsePressed,
+    required this.onChatPressed,
   }) : super(key: key);
 
   @override
@@ -174,9 +180,25 @@ class TicketCard extends StatelessWidget {
       child: ListTile(
         title: Text(title, style: TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Text(status),
-        trailing: TextButton(
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+        IconButton(
+          onPressed: onChatPressed,
+          icon: Icon(Icons.chat, color: Colors.orange),
+          tooltip: 'Voir le chat',
+        ),
+        IconButton(
           onPressed: onDetailsPressed,
-          child: Text('Détails', style: TextStyle(color: Colors.orange.shade800)),
+          icon: Icon(Icons.details, color: Colors.orange),
+          tooltip: 'Voir les détails',
+        ),
+        IconButton(
+          icon: Icon(Icons.reply, color: Colors.orange),
+          onPressed: onResponsePressed,
+          tooltip: 'Répondre au ticket',
+        ),
+          ],
         ),
       ),
     );

@@ -6,41 +6,51 @@ import '../../../blocs/notification/notification_state.dart';
 import '../../widgets/notification_card.dart';
 import '../../../core/constants/app_colors.dart';
 
-class NotificationsScreen extends StatelessWidget {
-  int _currentIndex = 0;
+class NotificationsScreen extends StatefulWidget {
+  @override
+  _NotificationsScreenState createState() => _NotificationsScreenState();
+}
+
+class _NotificationsScreenState extends State<NotificationsScreen> {
+  int _currentIndex = 2;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Notifications'),
+        backgroundColor: AppColors.primaryColor,
       ),
-      body: BlocBuilder<NotificationBloc, NotificationState>(
-        builder: (context, state) {
-          if (state is NotificationLoading) {
-            return Center(child: CircularProgressIndicator());
-          } else if (state is NotificationLoaded) {
-            return ListView.builder(
-              itemCount: state.notifications.length,
-              itemBuilder: (context, index) {
-                final notification = state.notifications[index];
-                return NotificationCard(
-                  notification: notification,
-                  onMarkAsRead: () {
-                    BlocProvider.of<NotificationBloc>(context).add(
-                      MarkNotificationAsRead(notificationId: notification.notificationId),
-                    );
-                  },
-                );
-              },
-            );
-          } else if (state is NotificationError) {
-            return Center(child: Text(state.message));
-          } else {
-            return Center(child: Text('Aucune notification disponible.'));
-          }
-        },
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: BlocBuilder<NotificationBloc, NotificationState>(
+          builder: (context, state) {
+            if (state is NotificationLoading) {
+              return Center(child: CircularProgressIndicator());
+            } else if (state is NotificationLoaded) {
+              return ListView.builder(
+                itemCount: state.notifications.length,
+                itemBuilder: (context, index) {
+                  final notification = state.notifications[index];
+                  return NotificationCard(
+                    notification: notification,
+                    onDelete: () {
+                      BlocProvider.of<NotificationBloc>(context).add(
+                        MarkNotificationAsRead(notificationId: notification.notificationId),
+                      );
+                    },
+                  );
+                },
+              );
+            } else if (state is NotificationError) {
+              return Center(child: Text(state.message));
+            } else {
+              return Center(child: Text('Aucune notification disponible.'));
+            }
+          },
+        ),
       ),
-      /*bottomNavigationBar: BottomNavigationBar(
+      bottomNavigationBar: BottomNavigationBar(
         items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.home, color: _currentIndex == 0 ? AppColors.primaryColor : AppColors.Colorabs),
@@ -56,11 +66,7 @@ class NotificationsScreen extends StatelessWidget {
             label: 'Notifications',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.chat, color: _currentIndex == 3 ? AppColors.primaryColor : AppColors.Colorabs),
-            label: 'Chat',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person, color: _currentIndex == 4 ? AppColors.primaryColor : AppColors.Colorabs),
+            icon: Icon(Icons.person, color: _currentIndex == 3 ? AppColors.primaryColor : AppColors.Colorabs),
             label: 'Profil',
           ),
         ],
@@ -81,14 +87,11 @@ class NotificationsScreen extends StatelessWidget {
               Navigator.pushReplacementNamed(context, '/notifications');
               break;
             case 3:
-              Navigator.pushReplacementNamed(context, '/chat');
-              break;
-            case 4:
               Navigator.pushReplacementNamed(context, '/profile');
               break;
           }
         },
-      ),*/
+      ),
     );
   }
 }

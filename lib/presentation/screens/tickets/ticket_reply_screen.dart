@@ -30,9 +30,20 @@ class TicketReplyScreen extends StatelessWidget {
 
     // Mettre à jour le statut du ticket
     await _firestore.collection('tickets').doc(ticketId).update({
-      'status': 'Répondu',
+      'status': 'Résolu',
       'assigned_to': responderId,
       'updated_at': FieldValue.serverTimestamp(),
+    });
+
+    // Enregistrer l'historique de la modification du statut
+    await _firestore
+        .collection('tickets')
+        .doc(ticketId)
+        .collection('history')
+        .add({
+      'status': 'Résolu',
+      'changed_by': responderId,
+      'changed_at': FieldValue.serverTimestamp(),
     });
 
     _responseController.clear();
@@ -62,7 +73,7 @@ class TicketReplyScreen extends StatelessWidget {
               onPressed: () {
                 final responderId = _authService.getCurrentUserId(); // Remplacer par l'ID de l'utilisateur actuel
                 _submitResponse(responderId!);
-                Navigator.pop(context); // Retour à la page précédente après la réponse
+                Navigator.pop(context, '/ticket-reponse'); // Retour à la page précédente après la réponse
               },
               child: Text('Envoyer la réponse'),
             ),

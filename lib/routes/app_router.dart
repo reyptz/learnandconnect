@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:learnandconnect/presentation/screens/tickets/ticket_chat_screen.dart';
@@ -33,11 +34,33 @@ class AppRouter {
 
     switch (settings.name) {
       case '/':
-        return _redirectBasedOnAuth(currentUser, HomeScreen());
+        return MaterialPageRoute(
+          builder: (_) => FutureBuilder<String?>(
+            future: _getUserRole(currentUser),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
+              }
+
+              if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
+                return LoginScreen();
+              }
+
+              final role = snapshot.data ?? '';
+
+              if (role == 'Admin') {
+                return DashboardScreen();
+              } else {
+                return HomeScreen();
+              }
+            },
+          ),
+        );
       case RoutePaths.login:
         // Rediriger les utilisateurs authentifiés vers la page d'accueil
         return _redirectIfAuthenticated(currentUser);
-        //return MaterialPageRoute(builder: (_) => LoginScreen());
       case RoutePaths.signUp:
         return MaterialPageRoute(builder: (_) => RegisterScreen());
       case RoutePaths.forgot:
@@ -74,19 +97,30 @@ class AppRouter {
         return _authGuard(currentUser, DashboardScreen());
       case RoutePaths.users:
         return _authGuard(currentUser, UsersScreen());
-    /*case RoutePaths.chat:
-        final currentUserId = settings.arguments as String? ?? '';
-        return _authGuard(currentUser, ChatListScreen(currentUserId: currentUserId));
-      case RoutePaths.chatMessage:
-        final arguments = settings.arguments as Map<String, String>? ?? {};
-        final currentUserId = arguments['currentUserId'] ?? '';
-        final chatId = arguments['chatId'] ?? '';
-        return _authGuard(currentUser, ChatScreen(currentUserId: currentUserId, chatId: chatId));*/
       case RoutePaths.notifications:
         return _authGuard(currentUser, NotificationsScreen());
       default:
         return _errorRoute();
     }
+  }
+
+  //Méthode pour obtenir le rôle de l'utilisateur actuel depuis Firestore.
+  Future<String?> _getUserRole(firebase_auth.User? user) async {
+    if (user == null) {
+      print("Aucun utilisateur connecté");
+      return null;
+    }
+
+    final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+
+    if (!doc.exists) {
+      print("Document utilisateur introuvable pour l'ID: ${user.uid}");
+      return null;
+    }
+
+    final role = doc.data()?['role'] ?? 'User';
+    print("Rôle récupéré: $role");
+    return role;
   }
 
   // Vérification de l'authentification pour protéger les routes
@@ -95,14 +129,6 @@ class AppRouter {
       return MaterialPageRoute(builder: (_) => screen);
     } else {
       // Rediriger vers la page de connexion si l'utilisateur n'est pas connecté
-      return MaterialPageRoute(builder: (_) => LoginScreen());
-    }
-  }
-
-  Route<dynamic> _redirectBasedOnAuth(firebase_auth.User? currentUser, Widget screen) {
-    if (currentUser != null) {
-      return MaterialPageRoute(builder: (_) => screen);
-    } else {
       return MaterialPageRoute(builder: (_) => LoginScreen());
     }
   }

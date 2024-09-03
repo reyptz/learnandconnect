@@ -32,3 +32,23 @@ class AuthFailure extends AuthState {
   @override
   List<Object?> get props => [message];
 }
+
+// State for redirecting to the Dashboard
+class AuthRedirectToDashboard extends AuthState {
+  final firebase_auth.User user;
+
+  const AuthRedirectToDashboard({required this.user});
+
+  @override
+  List<Object?> get props => [user];
+}
+
+// State for redirecting to the Home screen
+class AuthRedirectToHome extends AuthState {
+  final firebase_auth.User user;
+
+  const AuthRedirectToHome({required this.user});
+
+  @override
+  List<Object?> get props => [user];
+}

@@ -1,18 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../core/utils/date_utils.dart';
-
-enum Role {
-  apprenant,
-  formateur,
-  administrateur,
-}
 
 class User {
   String userId; // Firebase UID
   String email;
   String password; // Utilisé seulement si vous stockez le mot de passe localement
   String Name;
-  Role role; // Enum: "apprenant", "formateur", "administrateur"
+  String role; // Enum: "apprenant", "formateur", "administrateur"
   DateTime createdAt;
   DateTime lastLogin;
 
@@ -30,7 +23,7 @@ class User {
   User copyWith({
     String? userId,
     String? Name,
-    Role? role,
+    String? role,
     String? email,
     String? password,
     DateTime? createdAt,
@@ -55,7 +48,7 @@ class User {
       email: data['email'] ?? '',
       password: data['password'] ?? '',
       Name: data['name'] ?? '',
-      role: _stringToRole(data['role']),
+      role: data['role'] ?? '',
       createdAt: (data['created_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
       lastLogin: (data['last_login'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
@@ -67,16 +60,9 @@ class User {
       'email': email,
       'password': password,
       'name': Name,
-      'role': _roleToString(role),
+      'role': role,
       'created_at': createdAt,
       'last_login': lastLogin,
     };
-  }
-  static String _roleToString(Role role) {
-    return role.toString().split('.').last;
-  }
-
-  static Role _stringToRole(String roleString) {
-    return Role.values.firstWhere((role) => role.toString().split('.').last == roleString);
   }
 }

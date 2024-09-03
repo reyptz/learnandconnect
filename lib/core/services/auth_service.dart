@@ -72,6 +72,11 @@ class AuthService {
     throw Exception('Aucun utilisateur connecté');
   }
 
+  Future<Map<String, dynamic>> getUserData2(String userId) async {
+    DocumentSnapshot userDoc = await _firestore.collection('users').doc(userId).get();
+    return userDoc.data() as Map<String, dynamic>;
+  }
+
   // Envoi du lien de réinitialisation du mot de passe
   Future<void> sendPasswordResetEmail(String email) async {
     try {

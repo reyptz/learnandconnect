@@ -70,20 +70,22 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
       _selectedPriority = 'Moyenne'; // Réinitialiser à la priorité par défaut
       _selectedCategory = 'Technique'; // Réinitialiser à la catégorie par défaut
     });
+
+    Navigator.pushReplacementNamed(context, '/tickets');
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.primaryColor,
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text('Ajouter | Modifier', style: TextStyle(color: Colors.black)),
-        centerTitle: true,
+        title: Text('Ajouter un Ticket'),
+        centerTitle: false,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

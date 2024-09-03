@@ -27,7 +27,6 @@ class App extends StatelessWidget {
         themeMode: ThemeMode.light,
         initialRoute: '/login',  // Définit la route initiale de l'application
         onGenerateRoute: _appRouter.generateRoute,  // Utilise AppRouter pour générer les routes
-        home: NotificationsScreen(),
       ),
     );
   }

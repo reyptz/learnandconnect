@@ -13,12 +13,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   int _currentIndex = 0;
 
-  Future<List<DocumentSnapshot>> _getTicketsForDateRange(
-      DateTimeRange dateRange) async {
+  Future<List<DocumentSnapshot>> _getTicketsForDateRange(DateTimeRange dateRange) async {
     final snapshot = await _firestore
         .collection('tickets')
-        .where('created_at', isGreaterThanOrEqualTo: dateRange.start)
-        .where('created_at', isLessThanOrEqualTo: dateRange.end)
+        .where('created_at', isGreaterThanOrEqualTo: Timestamp.fromDate(dateRange.start))
+        .where('created_at', isLessThanOrEqualTo: Timestamp.fromDate(dateRange.end))
         .get();
 
     return snapshot.docs;
@@ -27,7 +26,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
   void _selectDateRange() async {
     final DateTimeRange? picked = await showDateRangePicker(
       context: context,
-      firstDate: DateTime(2020),
+      firstDate: DateTime(2024),
       lastDate: DateTime.now(),
     );
     if (picked != null && picked != _selectedDateRange) {
@@ -80,25 +79,21 @@ class _ReportsScreenState extends State<ReportsScreen> {
                       itemCount: tickets.length,
                       itemBuilder: (context, index) {
                         final ticket =
-                            tickets[index].data() as Map<String, dynamic>;
+                        tickets[index].data() as Map<String, dynamic>;
                         return Card(
                           margin: EdgeInsets.symmetric(vertical: 8.0),
                           child: ListTile(
-                            title: Text(ticket['title']),
+                            title: Text('Titre: ${ticket['title']}'),
                             subtitle: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text('Statut: ${ticket['status']}'),
-                                Text(
-                                    'Catégorie: ${ticket['category'] ?? 'N/A'}'),
-                                Text(
-                                    'Créé le: ${_formatTimestamp(ticket['created_at'])}'),
+                                Text('Catégorie: ${ticket['category'] ?? 'N/A'}'),
+                                Text('Priorité: ${ticket['priority'] ?? 'N/A'}'),
+                                Text('Assigné à: ${ticket['assigned_to'] ?? 'Non assigné'}'),
+                                Text('Créé le: ${_formatTimestamp(ticket['created_at'])}'),
                                 if (ticket['updated_at'] != null)
-                                  Text(
-                                      'Modifié le: ${_formatTimestamp(ticket['updated_at'])}'),
-                                if (ticket['resolved_at'] != null)
-                                  Text(
-                                      'Résolu le: ${_formatTimestamp(ticket['resolved_at'])}'),
+                                  Text('Modifié le: ${_formatTimestamp(ticket['updated_at'])}'),
                               ],
                             ),
                           ),
@@ -131,12 +126,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
             label: 'Profil',
           ),
         ],
-        currentIndex: _currentIndex, // Utilisez la variable d'état pour l'index actif
+        currentIndex: _currentIndex,
         onTap: (index) {
           setState(() {
-            _currentIndex = index; // Mettre à jour l'index sélectionné
+            _currentIndex = index;
           });
-          // Gérer la navigation entre les différentes pages
           switch (index) {
             case 0:
               Navigator.pushReplacementNamed(context, '/');
@@ -156,7 +150,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
 
-  // Fonction pour formater les timestamps
   String _formatTimestamp(Timestamp? timestamp) {
     if (timestamp == null) {
       return 'N/A';

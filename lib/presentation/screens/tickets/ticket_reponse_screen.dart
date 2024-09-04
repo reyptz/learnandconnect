@@ -4,6 +4,8 @@ import '../../../core/services/auth_service.dart'; // Assurez-vous d'importer Au
 import '../../../core/constants/app_colors.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/services/notification_service.dart';
+
 class ReponseTicketScreen extends StatefulWidget {
   final String ticketId;
 
@@ -56,6 +58,32 @@ class _ReponseTicketScreenState extends State<ReponseTicketScreen> {
       'status': status,
       'changed_by': userId,
       'changed_at': FieldValue.serverTimestamp(),
+    });
+
+    // Récupérer l'apprenant qui a créé le ticket
+    DocumentSnapshot ticketSnapshot = await _firestore.collection('tickets').doc(widget.ticketId).get();
+    final ticketData = ticketSnapshot.data() as Map<String, dynamic>;
+    final apprenantId = ticketData['user_id'];
+
+    // Envoyer une notification push à l'apprenant
+    DocumentSnapshot apprenantSnapshot = await _firestore.collection('users').doc(apprenantId).get();
+    final apprenantData = apprenantSnapshot.data() as Map<String, dynamic>;
+    final apprenantToken = apprenantData['fcm_token'];
+
+    NotificationService.showLocalNotification(
+      'Ticket pris en charge',
+      'Votre ticket est maintenant en cours de traitement.',
+      widget.ticketId,
+    );
+
+    // Enregistrer la notification dans Firestore
+    _firestore.collection('notifications').add({
+      'user_id': apprenantId,
+      'ticket_id': widget.ticketId,
+      'notification_text': 'Votre ticket est maintenant en cours de traitement.',
+      'notification_type': 'Push',
+      'is_read': false,
+      'created_at': FieldValue.serverTimestamp(),
     });
 
     // Rediriger vers le formulaire de réponse après l'assignation

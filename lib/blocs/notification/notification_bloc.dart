@@ -9,8 +9,8 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
 
   NotificationBloc(this._notificationService) : super(NotificationInitial());
 
-  @override
-  Stream<NotificationState> mapEventToState(NotificationEvent event) async* {
+  //@override
+/*  Stream<NotificationState> mapEventToState(NotificationEvent event) async* {
     if (event is LoadNotifications) {
       yield NotificationLoading();
       try {
@@ -42,5 +42,5 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
         yield NotificationError(message: e.toString());
       }
     }
-  }
+  }*/
 }

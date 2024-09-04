@@ -1,61 +1,116 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../../data/repositories/notification_repository.dart';
 import '../../data/models/notification_model.dart';
+import 'package:http/http.dart' as http;
 
 class NotificationService {
-  final NotificationRepository _notificationRepository = NotificationRepository();
-  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+  static FirebaseMessaging messaging = FirebaseMessaging.instance;
   final CollectionReference notificationCollection = FirebaseFirestore.instance.collection('notifications');
+  static FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
-  // Demander la permission pour les notifications push
-  Future<void> requestPermission() async {
-    await _firebaseMessaging.requestPermission();
+  static initNotification() async {
+    final InitializationSettings initializationSettings = InitializationSettings(
+      android: AndroidInitializationSettings('app_icon'),
+    );
+
+    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
   }
 
-  // Envoyer une notification (Push)
-  Future<void> sendPushNotification(Notification notification) async {
-    // Logique pour envoyer une notification push via Firebase Cloud Messaging
-    // ou utiliser des services tiers comme OneSignal ou Firebase Cloud Functions
-    await _notificationRepository.createNotification(notification);
+  static showLocalNotification(String title, String body, String payload) {
+    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+      '0', 'general',
+      priority: Priority.high,
+      importance: Importance.high,
+      autoCancel: false,
+      fullScreenIntent: true,
+      enableVibration: true,
+      playSound: true,
+    );
+
+    const NotificationDetails platformDetails = NotificationDetails(
+      android: androidDetails,
+    );
+
+    flutterLocalNotificationsPlugin.show(
+      0, // Notification ID
+      title, // Notification Title
+      body, // Notification Body
+      platformDetails, // Platform-specific Notification Details
+      payload: payload, // Data payload for the notification
+    );
   }
 
-  // Envoyer une notification par email
-  Future<void> sendEmailNotification(Notification notification) async {
-    // Logique pour envoyer des emails via un service comme SendGrid
-    await _notificationRepository.createNotification(notification);
-  }
+  static Future<void> initFCM() async {
+    // Demander la permission pour les notifications
+    NotificationSettings settings = await messaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
 
-  // Récupérer les notifications d'un utilisateur
-  Future<List<Notification>> getNotificationsByUserId(String userId) async {
-    try {
-      QuerySnapshot snapshot = await notificationCollection
-          .where('user_id', isEqualTo: userId)
-          .get();
-      return snapshot.docs
-          .map((doc) => Notification.fromFirestore(doc))
-          .toList();
-    } catch (e) {
-      throw Exception('Erreur lors du chargement des notifications: $e');
+    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+      print('Notification permission granted.');
+    } else {
+      print('Notification permission denied.');
+    }
+
+    // Gérer les notifications reçues en premier plan
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      print('Message reçu alors que l\'app est en premier plan: ${message.notification?.title}');
+      if (message.notification != null) {
+        NotificationService.showLocalNotification(
+          message.notification!.title!,
+          message.notification!.body!,
+          '',
+        );
+      }
+    });
+
+    // Gérer les notifications lorsque l'app est en arrière-plan ou relancée
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      print('Message cliqué! ${message.notification?.title}');
+      // Rediriger l'utilisateur vers l'écran approprié
+    });
+
+    Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+      // Vous pouvez traiter les messages ici et les afficher si nécessaire
+      print("Handling a background message: ${message.messageId}");
     }
   }
 
-  // Marquer une notification comme lue
-  Future<void> markNotificationAsRead(String notificationId) async {
-    try {
-      await notificationCollection.doc(notificationId).update({'is_read': true});
-    } catch (e) {
-      throw Exception('Erreur lors de la mise à jour de la notification: $e');
-    }
-  }
+  static  AndroidInitializationSettings initializationSettingsAndroid =
+  AndroidInitializationSettings('app_icon');
 
-  Future<void> updateNotification(Notification notification) async {
+  static Future<void> sendPushMessage(String token, String title, String body) async {
     try {
-      await notificationCollection
-          .doc(notification.notificationId)
-          .update(notification.toFirestore());
+      final response = await http.post(
+        Uri.parse('https://fcm.googleapis.com/fcm/send'),
+        headers: <String, String>{
+          'Content-Type': 'application/json',
+          'Authorization': 'key=AIzaSyCC_EUmLHyx15so3hWiyM5Zj2iSFf4r2Z8',
+        },
+        body: jsonEncode(
+          <String, dynamic>{
+            'to': token,
+            'notification': <String, dynamic>{
+              'title': title,
+              'body': body,
+            },
+            'data': <String, dynamic>{
+              'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+              'ticket_id': 'ticket_id',
+            },
+          },
+        ),
+      );
+      print('FCM request for device sent!');
+      print('Response: ${response.body}');
     } catch (e) {
-      throw Exception('Erreur lors de la mise à jour de la notification: $e');
+      print('Error sending FCM message: $e');
     }
   }
 }

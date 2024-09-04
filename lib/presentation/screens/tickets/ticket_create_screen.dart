@@ -1,7 +1,9 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/services/notification_service.dart';
 
 class CreateTicketScreen extends StatefulWidget {
   @override
@@ -22,6 +24,14 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
   final AuthService _authService = AuthService(); // Initialisation de AuthService
   int _currentIndex = 0;
 
+  void _storeUserToken(String userId) async {
+    String? fcmToken = await FirebaseMessaging.instance.getToken();
+    if (fcmToken != null) {
+      FirebaseFirestore.instance.collection('users').doc(userId).update({
+        'fcm_token': fcmToken,
+      });
+    }
+  }
 
   void _submitTicket() async {
     if (_titleController.text.isEmpty || _descriptionController.text.isEmpty) {
@@ -58,6 +68,53 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
       'created_at': FieldValue.serverTimestamp(),
       'updated_at': FieldValue.serverTimestamp(),
     });
+
+    /*// Stocker la notification pour l'utilisateur (apprenant)
+    await FirebaseFirestore.instance.collection('notifications').add({
+      'user_id': userId, // ID de l'utilisateur qui a créé le ticket
+      'ticket_id': docRef.id,
+      'notification_text': 'Vous avez créé un nouveau ticket.', // Le message personnalisé
+      'notification_type': 'Push',
+      'is_read': false,
+      'created_at': FieldValue.serverTimestamp(),
+    });
+
+    // Récupérer tous les formateurs
+    QuerySnapshot formateursSnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .where('role', isEqualTo: 'Formateur')
+        .get();
+
+    // Stocker la notification pour chaque formateur
+    for (var doc in formateursSnapshot.docs) {
+      await FirebaseFirestore.instance.collection('notifications').add({
+        'user_id': doc.id, // ID du formateur
+        'ticket_id': docRef.id,
+        'notification_text': 'Un nouveau ticket a été créé.', // Le même message pour les formateurs
+        'notification_type': 'Push',
+        'is_read': false,
+        'created_at': FieldValue.serverTimestamp(),
+      });
+    }*/
+
+    // Récupérer les formateurs et envoyer des notifications
+    QuerySnapshot formateurs = await _firestore.collection('users')
+        .where('role', isEqualTo: 'Formateur')
+        .get();
+
+    for (var formateur in formateurs.docs) {
+      String token = formateur['fcm_token'];
+      await NotificationService.sendPushMessage(token, 'Nouveau Ticket', 'Un nouveau ticket a été créé.');
+
+      // Stocker la notification dans Firestore
+      await _firestore.collection('notifications').add({
+        'user_id': formateur.id,
+        'ticket_id': docRef.id,
+        'notification_text': 'Un nouveau ticket a été créé.',
+        'is_read': false,
+        'created_at': FieldValue.serverTimestamp(),
+      });
+    }
 
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text('Ticket sauvegardé avec succès!'),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/services/auth_service.dart';
+import '../../../core/services/notification_service.dart';
 
 class TicketReplyScreen extends StatelessWidget {
   final String ticketId;
@@ -45,6 +46,39 @@ class TicketReplyScreen extends StatelessWidget {
       'changed_by': responderId,
       'changed_at': FieldValue.serverTimestamp(),
     });
+
+    try {
+      final userId = _authService.getCurrentUserId();
+
+      // Récupérer l'apprenant
+      DocumentSnapshot ticketSnapshot = await _firestore.collection('tickets').doc(ticketId).get();
+      final ticketData = ticketSnapshot.data() as Map<String, dynamic>;
+      final apprenantId = ticketData['user_id'];
+
+      // Envoyer une notification push à l'apprenant
+      DocumentSnapshot apprenantSnapshot = await _firestore.collection('users').doc(apprenantId).get();
+      final apprenantData = apprenantSnapshot.data() as Map<String, dynamic>;
+      final apprenantToken = apprenantData['fcm_token'];
+
+      NotificationService.showLocalNotification(
+        'Ticket Résolu',
+        'Votre ticket a été résolu.',
+        ticketId,
+      );
+
+      // Enregistrer la notification dans Firestore
+      _firestore.collection('notifications').add({
+        'user_id': apprenantId,
+        'ticket_id': ticketId,
+        'notification_text': 'Votre ticket a été résolu.',
+        'notification_type': 'Push',
+        'is_read': false,
+        'created_at': FieldValue.serverTimestamp(),
+      });
+
+    } catch (e) {
+      print('Erreur lors du changement du statut à Résolu: $e');
+    }
 
     _responseController.clear();
   }

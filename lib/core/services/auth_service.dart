@@ -1,12 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:firebase_messaging/firebase_messaging.dart'; // Importer Firebase Messaging
 import '../../data/repositories/auth_repository.dart';
 
 class AuthService {
   final AuthRepository _authRepository = AuthRepository();
-
   final firebase_auth.FirebaseAuth _firebaseAuth = firebase_auth.FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance; // Instance de Firebase Messaging
 
   // Inscription avec rôle par défaut
   Future<firebase_auth.User?> signUp(String email, String password, String Name, String role) async {
@@ -17,6 +18,13 @@ class AuthService {
       );
       firebase_auth.User? user = userCredential.user;
 
+      String? token = await FirebaseMessaging.instance.getToken();
+      if (token != null) {
+        FirebaseFirestore.instance.collection('users').doc(user?.uid).update({
+          'fcm_token': token,
+        });
+      }
+
       // Créer un document utilisateur dans Firestore après l'inscription
       if (user != null) {
         await _firestore.collection('users').doc(user.uid).set({
@@ -24,6 +32,7 @@ class AuthService {
           'name': Name,
           'role': role, // Stocke le rôle ici
           'created_at': FieldValue.serverTimestamp(),
+          'fcm_token': token, // Stocker le token FCM
         });
       }
       return user;
@@ -40,6 +49,15 @@ class AuthService {
         email: email,
         password: password,
       );
+      firebase_auth.User? user = userCredential.user;
+
+      String? token = await FirebaseMessaging.instance.getToken();
+      if (token != null) {
+        FirebaseFirestore.instance.collection('users').doc(user?.uid).update({
+          'fcm_token': token,
+        });
+      }
+
       return userCredential.user;
     } catch (e) {
       print(e);

@@ -57,7 +57,7 @@ Future<void> main() async {
   });
 
   // Initialiser le service de gestion des notifications
-  MyFirebaseMessagingService.initialize();
+  MyFirebaseMessagingService.configureFirebaseMessaging();
 
 
 

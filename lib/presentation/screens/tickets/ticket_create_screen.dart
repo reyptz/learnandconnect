@@ -69,6 +69,10 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
       'updated_at': FieldValue.serverTimestamp(),
     });
 
+    // Envoyer la notification à tous les formateurs
+    await _sendNotificationToFormateurs(docRef.id, _titleController.text);
+
+
     /*// Stocker la notification pour l'utilisateur (apprenant)
     await FirebaseFirestore.instance.collection('notifications').add({
       'user_id': userId, // ID de l'utilisateur qui a créé le ticket
@@ -97,7 +101,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
       });
     }*/
 
-    // Récupérer les formateurs et envoyer des notifications
+    /*// Récupérer les formateurs et envoyer des notifications
     QuerySnapshot formateurs = await _firestore.collection('users')
         .where('role', isEqualTo: 'Formateur')
         .get();
@@ -114,7 +118,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
         'is_read': false,
         'created_at': FieldValue.serverTimestamp(),
       });
-    }
+    }*/
 
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text('Ticket sauvegardé avec succès!'),
@@ -129,6 +133,44 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
     });
 
     Navigator.pushReplacementNamed(context, '/tickets');
+  }
+
+  Future<void> _sendNotificationToFormateurs(String ticketId, String ticketTitle) async {
+    try {
+      QuerySnapshot formateursSnapshot = await _firestore
+          .collection('users')
+          .where('role', isEqualTo: 'Formateur')
+          .get();
+
+      for (var formateur in formateursSnapshot.docs) {
+        final formateurData = formateur.data() as Map<String, dynamic>;
+        final fcmToken = formateurData['fcm_token'];
+
+        try {
+          if (fcmToken != null) {
+            await NotificationService.sendPushNotificationWithV1(
+              fcmToken,
+              'Nouveau ticket créé',
+              'Un nouvel apprenant a créé un ticket : $ticketTitle',
+            );
+          }
+        } catch (e) {
+          print('Erreur lors de l\'envoi de la notification : $e');
+        }
+
+        // Stocker la notification dans Firestore
+        await _firestore.collection('notifications').add({
+          'user_id': formateur.id,
+          'ticket_id': ticketId,
+          'notification_text': 'Un nouveau ticket a été créé.',
+          'notification_type': 'Push',
+          'is_read': false,
+          'created_at': FieldValue.serverTimestamp(),
+        });
+      }
+    } catch (e) {
+      print('Erreur lors de l\'envoi de la notification aux formateurs : $e');
+    }
   }
 
   @override

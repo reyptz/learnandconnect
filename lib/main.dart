@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'core/services/firebase_messaging_service.dart';
+import 'core/services/MyFirebaseMessagingService.dart';
 import 'firebase_options.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -15,73 +15,58 @@ import './core/services/auth_service.dart';
 import './core/services/ticket_service.dart';
 import './core/services/firestore_service.dart';
 import './core/services/notification_service.dart';
+import 'package:learnandconnect/core/services/MyFirebaseMessagingService.dart';
+
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized(); // Assurez-vous que les services Flutter sont initialisés
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  // Assurez-vous que tous les services Flutter sont initialisés correctement
+  WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialiser Firebase Messaging
+  // Initialisez Firebase
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Initialiser Firebase Messaging et le service MyFirebaseMessagingService
   FirebaseMessaging messaging = FirebaseMessaging.instance;
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  try {
+    await MyFirebaseMessagingService.initLocalNotification();
+  } catch (e) {
+    print('Erreur lors de l\'initialisation des notifications: $e');
+  }
 
-  // Demander les permissions de notification
+  // Gérer les messages reçus en premier plan
+  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    print('Message reçu en premier plan');
+    MyFirebaseMessagingService().handleForegroundMessage(message);
+  });
+
+  // Gérer les messages en arrière-plan
+  FirebaseMessaging.onBackgroundMessage(MyFirebaseMessagingService.onBackgroundMessage);
+
+  // Demander les permissions pour recevoir les notifications sur l'appareil
   NotificationSettings settings = await messaging.requestPermission(
     alert: true,
-    announcement: false,
     badge: true,
-    carPlay: false,
-    criticalAlert: false,
-    provisional: false,
     sound: true,
   );
 
   if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-    print('Utilisateur autorisé à recevoir des notifications');
+    print('L\'utilisateur a autorisé les notifications');
   } else {
     print('Notifications non autorisées');
   }
 
-  String? token = await messaging.getToken(
-    vapidKey: "21PE-MHbqNpgvJClXVgr-V8QQcnMqz5ttqFC0DKbEfU",
-  );
+  // Obtenir le token FCM de l'utilisateur
+  String? token = await messaging.getToken();
+  print("FCM Token: $token");
 
-  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-    print('Got a message whilst in the foreground!');
-    print('Message data: ${message.data}');
+  // Initialiser les notifications locales
+  NotificationService.initNotification();
 
-    if (message.notification != null) {
-      print('Message also contained a notification: ${message.notification}');
-    }
-  });
-
-  // Initialiser le service de gestion des notifications
-  MyFirebaseMessagingService.configureFirebaseMessaging();
-
-
-
-  runApp(MyApp()); // Démarrer l'application après l'initialisation de Firebase
+  // Exécuter l'application Flutter
+  runApp(MyApp());
 }
 
-// Fonction de rappel pour gérer les notifications reçues en arrière-plan
-@pragma('vm:entry-point')
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // If you're going to use other Firebase services in the background, such as Firestore,
-  // make sure you call `initializeApp` before using other Firebase services.
-  await Firebase.initializeApp();
-  print("Handling a background message: ${message.messageId}");
-}
 
-// Méthode pour stocker le token FCM dans Firestore
-void storeUserToken(String userId) async {
-  String? token = await FirebaseMessaging.instance.getToken();
-  if (token != null) {
-    FirebaseFirestore.instance.collection('users').doc(userId).update({
-      'fcm_token': token,
-    });
-  }
-}
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.

@@ -9,6 +9,16 @@ class AuthService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance; // Instance de Firebase Messaging
 
+  // Méthode pour stocker le token FCM de l'utilisateur
+  void storeUserToken(String userId) async {
+    String? token = await FirebaseMessaging.instance.getToken();
+    if (token != null) {
+      _firestore.collection('users').doc(userId).update({
+        'fcm_token': token,
+      });
+    }
+  }
+
   // Inscription avec rôle par défaut
   Future<firebase_auth.User?> signUp(String email, String password, String Name, String role) async {
     try {

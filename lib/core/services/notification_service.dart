@@ -8,12 +8,14 @@ import '../../data/repositories/notification_repository.dart';
 import '../../data/models/notification_model.dart';
 import 'package:http/http.dart' as http;
 import 'package:googleapis_auth/auth_io.dart';
+import 'package:learnandconnect/core/services/MyFirebaseMessagingService.dart';
 
 class NotificationService {
   static FirebaseMessaging messaging = FirebaseMessaging.instance;
   final CollectionReference notificationCollection = FirebaseFirestore.instance.collection('notifications');
   static FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
+  // Initialiser les notifications locales
   static initNotification() async {
     final InitializationSettings initializationSettings = InitializationSettings(
       android: AndroidInitializationSettings('app_icon'),
@@ -21,6 +23,7 @@ class NotificationService {
 
     await flutterLocalNotificationsPlugin.initialize(initializationSettings);
   }
+
 
   static showLocalNotification(String title, String body, String payload) {
     const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
@@ -37,13 +40,6 @@ class NotificationService {
       android: androidDetails,
     );
 
-    flutterLocalNotificationsPlugin.show(
-      0, // Notification ID
-      title, // Notification Title
-      body, // Notification Body
-      platformDetails, // Platform-specific Notification Details
-      payload: payload, // Data payload for the notification
-    );
   }
 
   static Future<void> initFCM() async {

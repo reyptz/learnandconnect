@@ -83,7 +83,7 @@ class NotificationService {
   static  AndroidInitializationSettings initializationSettingsAndroid =
   AndroidInitializationSettings('app_icon');
 
-  static Future<void> sendPushNotificationWithV1(String fcmToken, String title, String body) async {
+  /*static Future<void> sendPushNotificationWithV1(String fcmToken, String title, String body) async {
     var serviceAccount = ServiceAccountCredentials.fromJson({
       "type": "service_account",
       "project_id": "learnandconnect-f984c",
@@ -122,5 +122,5 @@ class NotificationService {
     }).catchError((e) {
       print('Error sending FCM message: $e');
     });
-  }
+  }*/
 }
